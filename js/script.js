@@ -25,7 +25,6 @@ document.getElementById('searchBox').addEventListener('input', function () {
 
                 document.getElementById('searchResults').innerHTML = output;
 
-                // Attach click event listener to each result item
                 document.querySelectorAll('.result-item').forEach(function (item) {
                     item.addEventListener('click', function () {
                         let productId = this.getAttribute('data-productid');
