@@ -7,14 +7,14 @@ require '../includes/simple_html_dom.php';
 
 // Categories and their corresponding URLs in techland
 $categories = [
-    'cpu' => 'https://www.techlandbd.com/pc-components/processor',
-    'gpu' => 'https://www.techlandbd.com/pc-components/graphics-card',
-    'ram' => 'https://www.techlandbd.com/pc-components/shop-desktop-ram',
-    'power_supply' => 'https://www.techlandbd.com/pc-components/power-supply',
-    'casing' => 'https://www.techlandbd.com/pc-components/computer-case',
-    'cpu_cooler' => 'https://www.techlandbd.com/pc-components/cpu-cooler',
-    'motherboard' => 'https://www.techlandbd.com/pc-components/motherboard',
-    'ssd' => 'https://www.techlandbd.com/pc-components/solid-state-drive'
+    'cpu' => 'https://www.ultratech.com.bd/processor',
+    'gpu' => 'https://www.ultratech.com.bd/graphics-card',
+    'ram' => 'https://www.ultratech.com.bd/ram',
+    'power_supply' => 'https://www.ultratech.com.bd/power-supply',
+    'casing' => 'https://www.ultratech.com.bd/casing',
+    'cpu_cooler' => 'https://www.ultratech.com.bd//cpu-cooler',
+    'motherboard' => 'https://www.ultratech.com.bd/amd-motherboard',
+    'ssd' => 'https://www.ultratech.com.bd/ssd'
 ];
 
 // Map category names to category IDs
@@ -35,7 +35,7 @@ function fetch_html_content($url){
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 300);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36");
 
@@ -60,10 +60,11 @@ function fetch_html_content($url){
 //     $cleanedProductName = strtolower(preg_replace('/\s+/', '-', $productName));
 //     $cleanedCategory = strtolower($category);
 
-//     $universalIdentifier = substr(md5($cleanedProductName . '-' . $cleanedCategory), 0, 35);
+//     $universalIdentifier = substr(md5($cleanedProductName . '-' . $cleanedCategory), 0, 12);
 
 //     return $universalIdentifier;
 // }
+
 function generateUniversalIdentifier($productName, $categoryId) {
     // List of common words to exclude
     $excludeWords = ['processor', 'graphics', 'card', 'desktop', 'edition', 'cooler', 'ram', 
@@ -90,8 +91,7 @@ function generateUniversalIdentifier($productName, $categoryId) {
 
 
 
-
-function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $category, $vendorId, $categoryId, $description){
+function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $category, $vendorId, $categoryId){
     $universalIdentifier = generateUniversalIdentifier($productName, $category);
     $stmt = $pdo->prepare("SELECT productId FROM products WHERE universalIdentifier = :universalIdentifier");
     $stmt->execute([':universalIdentifier' => $universalIdentifier]);
@@ -112,8 +112,8 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
             $insertPriceStmt->execute([':productId' => $productId, ':vendorId' => $vendorId, ':price' => $productPrice]);
         }
     } else {
-        $insertProductStmt = $pdo->prepare("INSERT INTO products (productName, productImage, categoryId, universalIdentifier, description) VALUES (:productName, :productImage, :categoryId, :universalIdentifier, :description)");
-        $insertProductStmt->execute([':productName' => $productName, ':productImage' => $productImage, ':categoryId' => $categoryId, ':universalIdentifier' => $universalIdentifier, ':description' => $description ]);
+        $insertProductStmt = $pdo->prepare("INSERT INTO products (productName, productImage, categoryId, universalIdentifier) VALUES (:productName, :productImage, :categoryId, :universalIdentifier)");
+        $insertProductStmt->execute([':productName' => $productName, ':productImage' => $productImage, ':categoryId' => $categoryId, ':universalIdentifier' => $universalIdentifier]);
 
         // Get the newly inserted productId
         $newProductId = $pdo->lastInsertId();
@@ -128,7 +128,7 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
 function scrapeCategory($url, $pdo, $category, $categoryId)
 {
     $page = 1;
-    $vendorId = 3;
+    $vendorId = 5;
 
     do {
         $dom = new DOMDocument();
@@ -151,22 +151,19 @@ function scrapeCategory($url, $pdo, $category, $categoryId)
             $productImage = $xpath->query(".//div[contains(@class, 'image')]//img", $product)->item(0)->getAttribute('src') ?? '';
             $description = $xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description';
             $newPrice = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-new')]", $product)->item(0)->nodeValue ?? 'N/A';
-            $oldPrice = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-old')]", $product)->item(0)->nodeValue ?? 'N/A';
+            // $oldPrice = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-old')]", $product)->item(0)->nodeValue ?? 'N/A';
             $productPrice = str_replace(',', '', $newPrice);
             $productPrice = floatval($productPrice);
             if ($productPrice == 0 || stripos($description, 'Upcoming') !== false || stripos($description, 'Out of Stock') !== false) {
                 continue; // Skip this product
             }
-
-            handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $category, $vendorId, $categoryId,$description);
-
+            handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $category, $vendorId, $categoryId);
             $productsFound = true;
         }
 
         $page++;
     } while ($productsFound);
 }
-
 
 
 foreach ($categories as $category => $url) {

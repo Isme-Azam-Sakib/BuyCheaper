@@ -20,8 +20,8 @@ include '../config/database.php';
         </header>
 
         <div class="search-container">
-        <input type="text" id="search" placeholder="Search for products..." autocomplete="off">
-        <div id="results"></div>
+            <input type="text" id="search" placeholder="Search for products..." autocomplete="off">
+            <div id="results"></div>
         </div>
 
         <div class="product-container">
@@ -34,3 +34,7 @@ include '../config/database.php';
     <script src="../js/app.js"></script>
 
 </html>
+
+
+
+
