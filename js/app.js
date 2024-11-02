@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     searchInput.addEventListener('input', function () {
         const query = searchInput.value.trim();
         if (query !== '') {
-            fetch('../includes/search.php', { 
+            fetch('/buyCheaper/includes/search.php', { // Update path to search.php
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -43,14 +43,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-
-
 // Function to handle "View More" button click
 function viewMore(query) {
-    window.location.href = `search_results.php?query=${encodeURIComponent(query)}`;
+    window.location.href = `/buyCheaper/public/search_results.php?query=${encodeURIComponent(query)}`; // Update path to search_results.php
 }
 
 // Function to redirect to the product details page when a search result is clicked
 function redirectToProduct(productId) {
-    window.location.href = `../public/product_details.php?id=${productId}`;
+    window.location.href = `/buyCheaper/public/product_details.php?id=${productId}`; // Update path to product_details.php
 }

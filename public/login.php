@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($admin && $admin['password'] === $password) {
         // Password is correct; set session and redirect to the admin page
         $_SESSION['admin_logged_in'] = true;
-        header("Location: index.php"); 
+        header("Location: /buyCheaper/index.php"); 
         exit();
     } else {
         // Invalid login credentials
