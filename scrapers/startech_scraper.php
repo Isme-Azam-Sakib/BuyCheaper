@@ -1,6 +1,8 @@
 <?php
 include '../config/database.php';
+include '../includes/navbar.php'; 
 require '../includes/simple_html_dom.php'; 
+
 
 // Categories and their corresponding URLs in Startech
 $categories = [
@@ -26,15 +28,7 @@ $categoryIds = [
     'ssd' => 8
 ];
 
-// Generate a universal identifier for the product
-// function generateUniversalIdentifier($productName, $category) {
-//     $cleanedProductName = strtolower(preg_replace('/\s+/', '-', $productName));
-//     $cleanedCategory = strtolower($category);
 
-//     $universalIdentifier = substr(md5($cleanedProductName . '-' . $cleanedCategory), 0, 35);
-
-//     return $universalIdentifier;
-// }
 
 
 function generateUniversalIdentifier($productName, $categoryId) {

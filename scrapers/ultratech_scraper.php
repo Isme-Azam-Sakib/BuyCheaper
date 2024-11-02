@@ -3,16 +3,17 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 include '../config/database.php';
+include '../includes/navbar.php'; 
 require '../includes/simple_html_dom.php';
 
-// Categories and their corresponding URLs in techland
+// Categories and their corresponding URLs in Ultratech
 $categories = [
     'cpu' => 'https://www.ultratech.com.bd/processor',
     'gpu' => 'https://www.ultratech.com.bd/graphics-card',
     'ram' => 'https://www.ultratech.com.bd/ram',
     'power_supply' => 'https://www.ultratech.com.bd/power-supply',
     'casing' => 'https://www.ultratech.com.bd/casing',
-    'cpu_cooler' => 'https://www.ultratech.com.bd//cpu-cooler',
+    'cpu_cooler' => 'https://www.ultratech.com.bd/cpu-cooler',
     'motherboard' => 'https://www.ultratech.com.bd/amd-motherboard',
     'ssd' => 'https://www.ultratech.com.bd/ssd'
 ];
@@ -56,42 +57,24 @@ function fetch_html_content($url){
     curl_close($ch);
 }
 
-// function generateUniversalIdentifier($productName, $category) {
-//     $cleanedProductName = strtolower(preg_replace('/\s+/', '-', $productName));
-//     $cleanedCategory = strtolower($category);
-
-//     $universalIdentifier = substr(md5($cleanedProductName . '-' . $cleanedCategory), 0, 12);
-
-//     return $universalIdentifier;
-// }
-
 function generateUniversalIdentifier($productName, $categoryId) {
-    // List of common words to exclude
+    // Common words to exclude
     $excludeWords = ['processor', 'graphics', 'card', 'desktop', 'edition', 'cooler', 'ram', 
                      'motherboard', 'power', 'supply', 'case', 'casing', 'ssd', 'socket', 
                      'am4', 'gb', 'mhz', 'module', 'memory', 'pci', 'express'];
 
-    // Normalize product name: lowercase, remove special characters
     $cleanedProductName = strtolower($productName);
     $cleanedProductName = preg_replace('/[^a-z0-9\s-]/', '', $cleanedProductName);
     $words = explode(' ', $cleanedProductName);
 
-    // Filter out common words
     $filteredWords = array_diff($words, $excludeWords);
-    
-    // Extract the brand (first significant word) and primary model identifier
-    $brand = $filteredWords[0] ?? 'generic'; // Default to 'generic' if no significant words
-    $model = $filteredWords[1] ?? ''; // Take the next significant word as model identifier if it exists
+    $brand = $filteredWords[0] ?? 'generic';
+    $model = $filteredWords[1] ?? '';
 
-    // Combine category ID, brand, and model to form SKU-like identifier
-    $generateUniversalIdentifier = "{$categoryId}-{$brand}-{$model}";
-
-    return $generateUniversalIdentifier;
+    return "{$categoryId}-{$brand}-{$model}";
 }
 
-
-
-function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $category, $vendorId, $categoryId){
+function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $category, $vendorId, $categoryId){
     $universalIdentifier = generateUniversalIdentifier($productName, $category);
     $stmt = $pdo->prepare("SELECT productId FROM products WHERE universalIdentifier = :universalIdentifier");
     $stmt->execute([':universalIdentifier' => $universalIdentifier]);
@@ -103,36 +86,31 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
         $priceCheckStmt->execute([':productId' => $productId, ':vendorId' => $vendorId]);
         $existingPrice = $priceCheckStmt->fetch();
         if ($existingPrice) {
-            // Update the existing price if the product is already listed for this vendor
             $updateStmt = $pdo->prepare("UPDATE vendor_prices SET price = :price WHERE productId = :productId AND vendorId = :vendorId");
             $updateStmt->execute([':price' => $productPrice, ':productId' => $productId, ':vendorId' => $vendorId]);
         } else {
-            // Insert new price entry for this vendor
-            $insertPriceStmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price) VALUES (:productId, :vendorId, :price)");
-            $insertPriceStmt->execute([':productId' => $productId, ':vendorId' => $vendorId, ':price' => $productPrice]);
+            $insertPriceStmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price, productUrl) VALUES (:productId, :vendorId, :price, :productUrl)");
+            $insertPriceStmt->execute([':productId' => $productId, ':vendorId' => $vendorId, ':price' => $productPrice, ':productUrl' => $productUrl]);
         }
     } else {
         $insertProductStmt = $pdo->prepare("INSERT INTO products (productName, productImage, categoryId, universalIdentifier) VALUES (:productName, :productImage, :categoryId, :universalIdentifier)");
         $insertProductStmt->execute([':productName' => $productName, ':productImage' => $productImage, ':categoryId' => $categoryId, ':universalIdentifier' => $universalIdentifier]);
 
-        // Get the newly inserted productId
         $newProductId = $pdo->lastInsertId();
 
-        // Insert new vendor price
-        $insertPriceStmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price) VALUES (:productId, :vendorId, :price)");
-        $insertPriceStmt->execute([':productId' => $newProductId, ':vendorId' => $vendorId, ':price' => $productPrice]);
+        $insertPriceStmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price, productUrl) VALUES (:productId, :vendorId, :price, :productUrl)");
+        $insertPriceStmt->execute([':productId' => $newProductId, ':vendorId' => $vendorId, ':price' => $productPrice, ':productUrl' => $productUrl]);
     }
-    echo "Scraped Product: $productName | Price: $productPrice  <br>";
+    echo "Scraped Product: $productName | Price: $productPrice | URL: $productUrl <br>";
 }
 
-function scrapeCategory($url, $pdo, $category, $categoryId)
-{
+function scrapeCategory($url, $pdo, $category, $categoryId){
     $page = 1;
     $vendorId = 5;
 
     do {
         $dom = new DOMDocument();
-        libxml_use_internal_errors(true); // Suppress parsing errors
+        libxml_use_internal_errors(true);
 
         $htmlContent = fetch_html_content($url . "?page=" . $page);
 
@@ -151,13 +129,12 @@ function scrapeCategory($url, $pdo, $category, $categoryId)
             $productImage = $xpath->query(".//div[contains(@class, 'image')]//img", $product)->item(0)->getAttribute('src') ?? '';
             $description = $xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description';
             $newPrice = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-new')]", $product)->item(0)->nodeValue ?? 'N/A';
-            // $oldPrice = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-old')]", $product)->item(0)->nodeValue ?? 'N/A';
             $productPrice = str_replace(',', '', $newPrice);
             $productPrice = floatval($productPrice);
             if ($productPrice == 0 || stripos($description, 'Upcoming') !== false || stripos($description, 'Out of Stock') !== false) {
-                continue; // Skip this product
+                continue;
             }
-            handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $category, $vendorId, $categoryId);
+            handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $category, $vendorId, $categoryId);
             $productsFound = true;
         }
 
@@ -165,9 +142,9 @@ function scrapeCategory($url, $pdo, $category, $categoryId)
     } while ($productsFound);
 }
 
-
 foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];
     echo "Scraping $category... <br>";
     scrapeCategory($url, $pdo, $category, $categoryId);
 }
+?>
