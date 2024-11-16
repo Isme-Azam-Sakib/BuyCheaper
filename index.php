@@ -28,6 +28,8 @@ $stmt->execute();
 $recentProducts = $stmt->fetchAll();
 
 $cpuCategoryId = 1;
+$ramCategoryId = 3;
+$psuCategoryId = 4;
 $stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage
                        FROM products p
                        JOIN vendor_prices vp ON p.productId = vp.productId
@@ -36,6 +38,25 @@ $stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.produ
                        LIMIT 8");
 $stmt->execute(['cpuCategoryId' => $cpuCategoryId]);
 $cpuProducts = $stmt->fetchAll();
+
+
+$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage
+                       FROM products p
+                       JOIN vendor_prices vp ON p.productId = vp.productId
+                       WHERE p.categoryId = :ramCategoryId AND vp.price > 0.00
+                       ORDER BY vp.lastUpdated DESC
+                       LIMIT 8");
+$stmt->execute(['ramCategoryId' => $ramCategoryId]);
+$ramProducts = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage
+                       FROM products p
+                       JOIN vendor_prices vp ON p.productId = vp.productId
+                       WHERE p.categoryId = :psuCategoryId AND vp.price > 0.00
+                       ORDER BY vp.lastUpdated DESC
+                       LIMIT 8");
+$stmt->execute(['psuCategoryId' => $psuCategoryId]);
+$psuProducts = $stmt->fetchAll();
 
 ?>
 
@@ -173,9 +194,43 @@ $cpuProducts = $stmt->fetchAll();
 
     <!-- CPU Carousel -->
     <section class="product-container container mt-5">
-        <h2>CPUs</h2>
+        <h2>Processors</h2>
         <div class="search-results">
             <?php foreach ($cpuProducts as $product): ?>
+                <div class="search-result-item">
+                    <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
+                    <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
+                    <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
+                    <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <!-- ram Carousel -->
+    <div class="full-width">
+        <section class="product-container container mt-5" >
+            <h2>Graphics Cards</h2>
+            <div class="search-results">
+                <?php foreach ($ramProducts as $product): ?>
+                    <div class="search-result-item">
+                        <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
+                        <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
+                        <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
+                        <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    </div>
+
+
+
+    <!-- PSU Carousel -->
+    <section class="product-container container mt-5">
+        <h2>Powersupply</h2>
+        <div class="search-results">
+            <?php foreach ($psuProducts as $product): ?>
                 <div class="search-result-item">
                     <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
                     <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
