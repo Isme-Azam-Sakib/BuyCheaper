@@ -106,7 +106,6 @@ function scrapeCategory($url, $pdo, $category, $categoryId) {
 
         $productsFound = false;
 
-        // Loop through each product card on the page
         foreach ($html->find('.p-item') as $product) {
             // Extract the product name and URL
             $productNameElement = $product->find('.p-item-name a', 0);
@@ -120,22 +119,18 @@ function scrapeCategory($url, $pdo, $category, $categoryId) {
             }
             $productPrice = $priceElement ? preg_replace('/[^0-9]/', '', $priceElement->plaintext) : "0";
 
-            // Extract the product image URL
             $productImageElement = $product->find('.p-item-img img', 0);
             $productImage = $productImageElement ? $productImageElement->src : "No Image";
 
-            // Call the function to handle database operations, now including the product URL
             handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $category, $vendorId, $categoryId, $productUrl);
 
-            // Set flag to true if at least one product is found
             $productsFound = true;
         }
 
         $page++;
-    } while ($productsFound); // Continue to the next page if products are found
+    } while ($productsFound); 
 }
 
-// Loop through each category and scrape it
 foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];
     echo "Scraping $category... <br>";

@@ -1,29 +1,21 @@
 <?php
-// Start a session to manage logged-in state
 session_start();
 
-// Include the database configuration file
 require_once '../config/database.php';
 
-// Check if the login form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Retrieve submitted username and password
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // Prepare and execute the SQL query to fetch admin details
     $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = :username");
     $stmt->execute(['username' => $username]);
     $admin = $stmt->fetch();
 
-    // Verify password if an admin was found
     if ($admin && $admin['password'] === $password) {
-        // Password is correct; set session and redirect to the admin page
         $_SESSION['admin_logged_in'] = true;
         header("Location: /buyCheaper/index.php"); 
         exit();
     } else {
-        // Invalid login credentials
         $error = "Invalid username or password.";
     }
 }

@@ -135,12 +135,11 @@ function scrapeCategory($url, $pdo, $category, $categoryId)
                 continue;
             }
 
-            // Process the product and store in the database
             handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $category, $vendorId, $categoryId, $description);
-            $productsFound = true; // At least one product was found and processed
+            $productsFound = true; 
         }
 
-        $page++; // Move to the next page
+        $page++; 
 
     } while ($productsFound);
 }

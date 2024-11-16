@@ -2,7 +2,6 @@
 include '../config/database.php';
 require '../includes/simple_html_dom.php'; 
 
-// Categories and their corresponding URLs for Ryans
 $categories = [
     'cpu' => 'https://www.ryans.com/category/desktop-component-processor',
     'gpu' => 'https://www.ryans.com/category/desktop-component-graphics-card',
@@ -14,7 +13,6 @@ $categories = [
     'ssd' => 'https://www.ryans.com/category/internal-ssd'
 ];
 
-// Map category names to category IDs
 $categoryIds = [
     'cpu' => 1,
     'gpu' => 2,

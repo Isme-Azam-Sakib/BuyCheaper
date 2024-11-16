@@ -2,6 +2,9 @@
 include 'config/database.php';
 include 'includes/navbar.php';
 
+// Fetch unique brand names from products
+$brands = $pdo->query("SELECT DISTINCT SUBSTRING_INDEX(productName, ' ', 1) AS brand FROM products ORDER BY brand")->fetchAll(PDO::FETCH_COLUMN);
+
 // Fetch categories and products for each category
 $categories = $pdo->query("SELECT DISTINCT categoryId, category FROM products")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -24,7 +27,7 @@ $stmt = $pdo->prepare($query);
 $stmt->execute();
 $recentProducts = $stmt->fetchAll();
 
-$cpuCategoryId = 1; // Assuming CPUs have a categoryId of 1
+$cpuCategoryId = 1;
 $stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage
                        FROM products p
                        JOIN vendor_prices vp ON p.productId = vp.productId
@@ -43,41 +46,133 @@ $cpuProducts = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BuyCheaper - Price Comparison</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@100..900&family=Poppins:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>BuyCheaper</h1>
-            <p>Search for the best deals on your favorite products!</p>
-        </header>
-        <!---------------------------------------- search ---------------------------------------->
-        <div class="search-container">
-            <input type="text" id="search" placeholder="Search for products..." autocomplete="off">
-            <div id="results"></div> <!-- This div will display the search results -->
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="overlay"></div>
+        <div class="hero-content">
+            <h1>Your build, Your decision</h1>
+            <p>Find & compare the best deals available</p>
+            <a href="#search" class="cta-button">Get Started</a>
         </div>
-        <!---------------------------------------- recently added ---------------------------------------->
-        <section class="recently-added-section">
-            <h2>Recently Added Products</h2>
-            <div class="recent-products-carousel">
-                <button class="carousel-arrow left-arrow">&#10094;</button>
-                <div class="carousel-track">
-                    <?php foreach ($recentProducts as $product): ?>
-                        <div class="carousel-item">
-                            <img src="<?= $product['productImage']; ?>" alt="<?= $product['productName']; ?>" />
-                            <h3><?= $product['productName']; ?></h3>
-                            <p><?= $product['description']; ?></p>
-                            <span class="price">Price: ৳<?= $product['price']; ?></span>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <button class="carousel-arrow right-arrow">&#10095;</button>
-            </div>
-        </section>
+    </section>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: poppins;
+        }
 
-    <!---------------------------------------- cpu carousel ---------------------------------------->
-    <section class="product-container">
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: url('assets/pcbuild1.jpg') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Semi-transparent overlay */
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: #fff;
+            text-align: center;
+        }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .hero-content p {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-top: 10px;
+        }
+
+        .cta-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            background-color: #ff5722;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .cta-button:hover {
+            background-color: #e64a19;
+        }
+    </style>
+
+    <!-- Browse Brands Section -->
+    <section class="browse-brands-section container mt-5">
+        <h2>Browse Brands</h2>
+        <div class="d-flex flex-wrap gap-3">
+            <?php foreach ($brands as $brand): ?>
+                <a href="/buyCheaper/public/brand_products.php?brand=<?= urlencode($brand); ?>" class="btn btn-outline-primary">
+                    <?= htmlspecialchars($brand); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+
+      <!-- search -->
+      <div class="search-container container">
+        <h2>Looking for a product? </h2>
+        <input type="text" id="search" placeholder="Search for any product..." autocomplete="off">
+        <div id="results"></div> <!-- This div will display the search results -->
+    </div>
+
+    <!-- Recently Added Section -->
+    <section class="recently-added-section container mt-5">
+        <h2>Recently Added Products</h2>
+        <div class="recent-products-carousel">
+            <button class="carousel-arrow left-arrow">&#10094;</button>
+            <div class="carousel-track">
+                <?php foreach ($recentProducts as $product): ?>
+                    <div class="carousel-item">
+                        <img src="<?= $product['productImage']; ?>" alt="<?= $product['productName']; ?>" />
+                        <h3><?= $product['productName']; ?></h3>
+                        <p><?= $product['description']; ?></p>
+                        <span class="price">Price: ৳<?= $product['price']; ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <button class="carousel-arrow right-arrow">&#10095;</button>
+        </div>
+    </section>
+
+    <!-- CPU Carousel -->
+    <section class="product-container container mt-5">
         <h2>CPUs</h2>
         <div class="search-results">
             <?php foreach ($cpuProducts as $product): ?>
@@ -91,9 +186,7 @@ $cpuProducts = $stmt->fetchAll();
         </div>
     </section>
 
-
-
-    <!---------------------------------------- others ---------------------------------------->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const track = document.querySelector('.carousel-track');
@@ -119,7 +212,6 @@ $cpuProducts = $stmt->fetchAll();
             });
         });
     </script>
-
     <script src="js/app.js"></script>
 </body>
 

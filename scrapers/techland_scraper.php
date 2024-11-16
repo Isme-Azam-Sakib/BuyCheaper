@@ -1,4 +1,4 @@
-<?php
+<?php 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -6,7 +6,6 @@ include '../config/database.php';
 include '../includes/navbar.php'; 
 require '../includes/simple_html_dom.php';
 
-// Categories and URLs for Techland
 $categories = [
     'cpu' => 'https://www.techlandbd.com/pc-components/processor',
     'gpu' => 'https://www.techlandbd.com/pc-components/graphics-card',
@@ -18,7 +17,6 @@ $categories = [
     'ssd' => 'https://www.techlandbd.com/pc-components/solid-state-drive'
 ];
 
-// Map category names to category IDs
 $categoryIds = [
     'cpu' => 1,
     'gpu' => 2,
@@ -30,7 +28,6 @@ $categoryIds = [
     'ssd' => 8
 ];
 
-// Fetch content using cURL
 function fetch_html_content($url){
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -39,9 +36,7 @@ function fetch_html_content($url){
     curl_setopt($ch, CURLOPT_TIMEOUT, 60);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-
     $htmlContent = curl_exec($ch);
-
     if (curl_errno($ch)) {
         echo "cURL Error: " . curl_error($ch);
         return false;
@@ -50,94 +45,165 @@ function fetch_html_content($url){
         if ($httpCode == 200) {
             return $htmlContent;
         } else {
-            echo "Failed to fetch content. HTTP Status Code: $httpCode";
+            echo "Failed to fetch content. HTTP Status Code: $httpCode<br>";
             return false;
         }
     }
     curl_close($ch);
 }
 
-// Generate universal identifier
-function generateUniversalIdentifier($productName, $categoryId) {
-    // List of common words to exclude
-    $excludeWords = ['processor', 'graphics', 'card', 'desktop', 'edition', 'cooler', 'ram', 'motherboard', 'power', 'supply', 'case', 'casing', 'ssd', 'socket', 'am4', 'gb', 'mhz', 'module', 'memory', 'pci', 'express'];
-    $cleanedProductName = strtolower(preg_replace('/[^a-z0-9\s-]/', '', $productName));
-    $words = array_diff(explode(' ', $cleanedProductName), $excludeWords);
-    $brand = $words[0] ?? 'generic';
-    $model = $words[1] ?? '';
-    return "{$categoryId}-{$brand}-{$model}";
+function generateStandardName($productName) {
+    $standard_name = strtolower($productName);
+    $standard_name = preg_replace('/[^a-z0-9\s\-\/\.]/', '', $standard_name);
+    $standard_name = str_replace(['-', '/', '|'], ' ', $standard_name);
+    $keywords = [
+        'gaming', 'processor', 'core', 'intel', 'amd', 'gen', 'series', 'edition', 'liquid', 
+        'cooler', 'new', 'latest', 'ultra', 'pro', 'max', 'super', 'rgb', 'mm', 'aio', 
+        'desktop', 'laptop', 'graphics', 'card', 'cool', 'power', 'supply', 'ram', 
+        'ssd', 'tb', 'gb', 'hz', 'mhz', 'fps'
+    ];
+    foreach ($keywords as $word) {
+        $standard_name = preg_replace('/\b' . preg_quote($word, '/') . '\b/', '', $standard_name);
+    }
+
+    $standard_name = preg_replace('/(\d+\s?(gb|tb|hz|mhz))/', ' $1 ', $standard_name);
+    $standard_name = trim(preg_replace('/\s+/', ' ', $standard_name));
+
+    return $standard_name;
 }
 
-// Database operations
-function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $category, $vendorId, $categoryId, $description){
-    $universalIdentifier = generateUniversalIdentifier($productName, $category);
-    $stmt = $pdo->prepare("SELECT productId FROM products WHERE universalIdentifier = :universalIdentifier");
-    $stmt->execute([':universalIdentifier' => $universalIdentifier]);
+
+
+function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand) {
+    // Generate the standard name for the scraped product
+    $scrapedStandardName = generateStandardName($productName);
+
+    // Step 1: Search for potential matches in all_products
+    $stmt = $pdo->prepare("SELECT id, standard_name FROM all_products WHERE categoryId = :categoryId");
+    $stmt->execute([':categoryId' => $categoryId]);
+    $allProducts = $stmt->fetchAll();
+
+    $matchedProductId = null;
+    foreach ($allProducts as $product) {
+        $existingStandardName = $product['standard_name'];
+        $existingId = $product['id'];
+
+        // Check if the scraped standard name contains terms from the existing standard name
+        if (isMatch($scrapedStandardName, $existingStandardName)) {
+            $matchedProductId = $existingId;
+            break;
+        }
+    }
+
+    // Step 2: Handle products in all_products and products tables
+    if ($matchedProductId) {
+        $productId = $matchedProductId;
+    } else {
+        // If no match, insert new product into all_products
+        $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
+        $stmt->execute([
+            ':standard_name' => $scrapedStandardName,
+            ':categoryId' => $categoryId,
+            ':brand' => $brand
+        ]);
+        $productId = $pdo->lastInsertId();
+    }
+
+    // Step 3: Check or add/update in products table
+    $stmt = $pdo->prepare("SELECT productId FROM products WHERE productId = :productId");
+    $stmt->execute([':productId' => $productId]);
     $existingProduct = $stmt->fetch();
 
     if ($existingProduct) {
-        $productId = $existingProduct['productId'];
-        $priceCheckStmt = $pdo->prepare("SELECT * FROM vendor_prices WHERE productId = :productId AND vendorId = :vendorId");
-        $priceCheckStmt->execute([':productId' => $productId, ':vendorId' => $vendorId]);
-        $existingPrice = $priceCheckStmt->fetch();
-        if ($existingPrice) {
-            // Update the existing price and URL for this vendor
-            $updateStmt = $pdo->prepare("UPDATE vendor_prices SET price = :price, productUrl = :productUrl WHERE productId = :productId AND vendorId = :vendorId");
-            $updateStmt->execute([':price' => $productPrice, ':productId' => $productId, ':vendorId' => $vendorId, ':productUrl' => $productUrl]);
-        } else {
-            // Insert new price entry and URL for this vendor
-            $insertPriceStmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price, productUrl) VALUES (:productId, :vendorId, :price, :productUrl)");
-            $insertPriceStmt->execute([':productId' => $productId, ':vendorId' => $vendorId, ':price' => $productPrice, ':productUrl' => $productUrl]);
-        }
+        $stmt = $pdo->prepare("UPDATE products SET productName = :productName, productImage = :productImage, description = :description WHERE productId = :productId");
+        $stmt->execute([
+            ':productName' => $productName,
+            ':productImage' => $productImage,
+            ':description' => $description,
+            ':productId' => $productId
+        ]);
     } else {
-        $insertProductStmt = $pdo->prepare("INSERT INTO products (productName, productImage, categoryId, universalIdentifier, description) VALUES (:productName, :productImage, :categoryId, :universalIdentifier, :description)");
-        $insertProductStmt->execute([':productName' => $productName, ':productImage' => $productImage, ':categoryId' => $categoryId, ':universalIdentifier' => $universalIdentifier, ':description' => $description]);
-
-        // Get the newly inserted productId
-        $newProductId = $pdo->lastInsertId();
-
-        // Insert new vendor price with URL
-        $insertPriceStmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price, productUrl) VALUES (:productId, :vendorId, :price, :productUrl)");
-        $insertPriceStmt->execute([':productId' => $newProductId, ':vendorId' => $vendorId, ':price' => $productPrice, ':productUrl' => $productUrl]);
+        $stmt = $pdo->prepare("INSERT INTO products (productId, productName, productImage, categoryId, description) VALUES (:productId, :productName, :productImage, :categoryId, :description)");
+        $stmt->execute([
+            ':productId' => $productId,
+            ':productName' => $productName,
+            ':productImage' => $productImage,
+            ':categoryId' => $categoryId,
+            ':description' => $description
+        ]);
     }
-    echo "Scraped Product: $productName | Price: $productPrice | URL: $productUrl <br>";
+
+    // Step 4: Handle vendor prices
+    $stmt = $pdo->prepare("SELECT * FROM vendor_prices WHERE productId = :productId AND vendorId = :vendorId");
+    $stmt->execute([':productId' => $productId, ':vendorId' => $vendorId]);
+    $existingPrice = $stmt->fetch();
+
+    if ($existingPrice) {
+        $stmt = $pdo->prepare("UPDATE vendor_prices SET price = :price, productUrl = :productUrl, lastUpdated = NOW() WHERE productId = :productId AND vendorId = :vendorId");
+        $stmt->execute([
+            ':price' => $productPrice,
+            ':productUrl' => $productUrl,
+            ':productId' => $productId,
+            ':vendorId' => $vendorId
+        ]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price, productUrl, lastUpdated) VALUES (:productId, :vendorId, :price, :productUrl, NOW())");
+        $stmt->execute([
+            ':productId' => $productId,
+            ':vendorId' => $vendorId,
+            ':price' => $productPrice,
+            ':productUrl' => $productUrl
+        ]);
+    }
+}
+
+function isMatch($scrapedStandardName, $existingStandardName) {
+    $scrapedKeywords = explode(' ', $scrapedStandardName);
+    $existingKeywords = explode(' ', $existingStandardName);
+
+    // Check if at least 75% of the existing keywords appear in the scraped product
+    $matchedCount = 0;
+    foreach ($existingKeywords as $word) {
+        if (in_array($word, $scrapedKeywords)) {
+            $matchedCount++;
+        }
+    }
+
+    $threshold = 0.75;
+    return ($matchedCount / count($existingKeywords)) >= $threshold;
 }
 
 
-// Scrape categories
-function scrapeCategory($url, $pdo, $category, $categoryId)
-{
-    $page = 1;
-    $vendorId = 3;
 
+// Scrape categories
+function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
+    $page = 1;
     do {
+        $htmlContent = fetch_html_content($url . "?page=" . $page);
+        if (!$htmlContent) break;
+
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        $htmlContent = fetch_html_content($url . "?page=" . $page);
-
-        if (!$dom->loadHTML($htmlContent)) {
-            echo "Failed to parse HTML content.";
-            return;
-        }
-
+        $dom->loadHTML($htmlContent);
         $xpath = new DOMXPath($dom);
         $products = $xpath->query("//div[contains(@class, 'product-layout')]");
-        $productsFound = false;
 
+        $productsFound = false;
         foreach ($products as $product) {
+            if (strpos($product->getAttribute('class'), 'out-of-stock') !== false) continue;
+
             $productName = $xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->nodeValue ?? 'N/A';
+            $brand = strtok($productName, ' ');
             $productUrl = $xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->getAttribute('href') ?? '';
             $productImage = $xpath->query(".//div[contains(@class, 'image')]//img", $product)->item(0)->getAttribute('src') ?? '';
             $description = $xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description';
             $newPrice = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-new')]", $product)->item(0)->nodeValue ?? 'N/A';
             $productPrice = floatval(str_replace(',', '', $newPrice));
             
-            if ($productPrice == 0 || stripos($description, 'Upcoming') !== false || stripos($description, 'Out of Stock') !== false) {
-                continue;
+            if ($productPrice > 0) {
+                handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand);
+                $productsFound = true;
             }
-
-            handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $category, $vendorId, $categoryId, $description);
-            $productsFound = true;
         }
         $page++;
     } while ($productsFound);
@@ -145,6 +211,6 @@ function scrapeCategory($url, $pdo, $category, $categoryId)
 
 foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];
-    echo "Scraping $category... <br>";
-    scrapeCategory($url, $pdo, $category, $categoryId);
+    scrapeCategory($url, $pdo, $categoryId, 3);
 }
+?>
