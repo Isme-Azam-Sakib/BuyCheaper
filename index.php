@@ -145,8 +145,8 @@ $cpuProducts = $stmt->fetchAll();
     </section>
 
 
-      <!-- search -->
-      <div class="search-container container">
+    <!-- search -->
+    <div class="search-container container">
         <h2>Looking for a product? </h2>
         <input type="text" id="search" placeholder="Search for any product..." autocomplete="off">
         <div id="results"></div> <!-- This div will display the search results -->
@@ -162,7 +162,7 @@ $cpuProducts = $stmt->fetchAll();
                     <div class="carousel-item">
                         <img src="<?= $product['productImage']; ?>" alt="<?= $product['productName']; ?>" />
                         <h3><?= $product['productName']; ?></h3>
-                        <p><?= $product['description']; ?></p>
+                        <p style="margin-bottom: 60px"><?= $product['description']; ?></p>
                         <span class="price">Price: ৳<?= $product['price']; ?></span>
                     </div>
                 <?php endforeach; ?>
@@ -179,7 +179,7 @@ $cpuProducts = $stmt->fetchAll();
                 <div class="search-result-item">
                     <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
                     <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
-                    <p><?php echo htmlspecialchars($product['description']); ?></p>
+                    <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
                     <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
                 </div>
             <?php endforeach; ?>

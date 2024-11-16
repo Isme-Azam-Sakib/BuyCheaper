@@ -798,3 +798,47 @@ body {
     color: red;
     margin-bottom: 10px;
 }
+
+
+/* ===================
+product comparison
+=================== */
+.comparison-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.comparison-columns {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+}
+
+.comparison-column {
+    width: 30%;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.product-search {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.product-details img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+
+/* ===================
+product comparison
+=================== */
+
+

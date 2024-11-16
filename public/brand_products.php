@@ -2,13 +2,22 @@
 include '../config/database.php';
 include '../includes/navbar.php';
 
-$query = isset($_GET['query']) ? $_GET['query'] : '';
+// Get the brand from the query string
+$brand = isset($_GET['brand']) ? $_GET['brand'] : null;
 
-if ($query) {
-    $search = "%{$query}%";
-    $stmt = $pdo->prepare("SELECT productId, productName, productImage, description FROM products WHERE productName LIKE :search");
-    $stmt->execute(['search' => $search]);
+if ($brand) {
+    // Prepare a statement to fetch products matching the brand
+    $stmt = $pdo->prepare("
+        SELECT p.productId, p.productName, p.productImage, p.description, MIN(vp.price) AS lowestPrice
+        FROM products p
+        JOIN vendor_prices vp ON p.productId = vp.productId
+        WHERE p.productName LIKE :brand
+        GROUP BY p.productId
+    ");
+    $stmt->execute(['brand' => $brand . '%']);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $products = [];
 }
 ?>
 
@@ -18,40 +27,39 @@ if ($query) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Results for "<?php echo htmlspecialchars($query); ?>"</title>
+    <title>Products by Brand - <?= htmlspecialchars($brand); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@100..900&family=Poppins:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/style.css">
 </head>
 
 <body>
-    
-    <h1 class="container" style="font-weight: 700;">Search Results for "<?php echo htmlspecialchars($query); ?>"</h1>
-    <div class="search-results container">
-        <?php if (!empty($products)): ?>
-            <?php foreach ($products as $product): ?>
-                <div class="search-result-item">
-                    <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
-                    <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
-                    <p><?php echo htmlspecialchars($product['description']); ?></p>
-                    <!-- Updated the button link to redirect to product_details.php -->
-                    <a href="product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
-                </div>
-            <?php endforeach; ?>
+    <div class="container mt-5">
+        <h2 style="font-weight: 700; font-family:poppins; ">Products for Brand: <?= htmlspecialchars($brand); ?></h2>
+        <?php if (count($products) > 0): ?>
+            <div class="row">
+                <?php foreach ($products as $product): ?>
+                    <div class="col-md-3 mb-4">
+                        <div class="card">
+                            <img src="<?= htmlspecialchars($product['productImage']); ?>" class="card-img-top" alt="<?= htmlspecialchars($product['productName']); ?>">
+                            <div class="card-body">
+                                <h5 class="card-title"><?= htmlspecialchars($product['productName']); ?></h5>
+                                <p class="card-text"><?= htmlspecialchars($product['description']); ?></p>
+                                <p class="card-text" style="margin-bottom: 60px">Lowest Price: ৳<?= number_format($product['lowestPrice'], 2); ?></p>
+                                <a href="product_details.php?id=<?= $product['productId']; ?>" class="compare-price-button" style="text-align:center;">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         <?php else: ?>
-            <p>No results found for "<?php echo htmlspecialchars($query); ?>"</p>
+            <p>No products found for this brand.</p>
         <?php endif; ?>
     </div>
 
-
-
-    <script>
-        function redirectToProduct(productId) {
-            window.location.href = `product_details.php?id=${productId}`;
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
