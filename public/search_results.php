@@ -35,7 +35,8 @@ if ($query) {
                 <div class="search-result-item">
                     <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
                     <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
-                    <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
+                    <p><?php echo htmlspecialchars($product['description']); ?></p>
+                    <!-- Updated the button link to redirect to product_details.php -->
                     <a href="product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
                 </div>
             <?php endforeach; ?>

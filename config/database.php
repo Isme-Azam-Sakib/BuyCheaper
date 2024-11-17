@@ -2,7 +2,7 @@
 $host = 'localhost';
 $dbname = 'price_comparison';
 $user = 'root';
-$pass = '';
+$pass = '';   
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass);
