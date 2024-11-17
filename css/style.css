@@ -811,6 +811,78 @@ body {
     margin-bottom: 10px;
 }
 
+.hidden-brand {
+    display: none;
+}
+
+#show-more-btn {
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+#show-more-btn:hover {
+    background-color: #0056b3;
+    color: #fff;
+}
+
+/* Style for product container */
+.search-result-item {
+    position: relative; /* Ensures proper placement of elements */
+    border: 1px solid #ddd; /* Optional: Add a border for clarity */
+    padding: 16px;
+    margin: 16px;
+    background-color: #fff;
+    border-radius: 8px; /* Optional: Rounded corners */
+    overflow: hidden; /* Ensure content stays within bounds */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
+}
+
+.search-result-item:hover {
+    transform: scale(1.03); /* Slight zoom on hover */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
+}
+
+/* Style for the button */
+.compare-price-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #ff6f61;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 10px; /* Adjust to avoid overlap */
+    position: relative;
+    z-index: 1; /* Ensure the button is above content */
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth hover effect */
+}
+
+.compare-price-button:hover {
+    background-color: #e65a50; /* Darker shade on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+/* For product description and layout */
+.search-results img {
+    width: 100%;
+    height: auto;
+    object-fit: cover; /* Ensure the image doesn't stretch */
+    margin-bottom: 10px;
+}
+
+.search-results h2 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.search-results p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 12px;
+}
 
 /* ===================
 product comparison

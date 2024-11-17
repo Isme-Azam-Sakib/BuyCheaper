@@ -155,15 +155,24 @@ $psuProducts = $stmt->fetchAll();
 
     <!-- Browse Brands Section -->
     <section class="browse-brands-section container mt-5">
-        <h2>Browse Brands</h2>
-        <div class="d-flex flex-wrap gap-3">
-            <?php foreach ($brands as $brand): ?>
-                <a href="/buyCheaper/public/brand_products.php?brand=<?= urlencode($brand); ?>" class="btn btn-outline-primary">
-                    <?= htmlspecialchars($brand); ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
+    <h2>Browse Brands</h2>
+    <div id="brand-list" class="d-flex flex-wrap gap-3">
+        <?php foreach ($brands as $index => $brand): ?>
+            <a 
+                href="/buyCheaper/public/brand_products.php?brand=<?= urlencode($brand); ?>" 
+                class="btn btn-outline-primary brand-item <?= $index >= 10 ? 'hidden-brand' : ''; ?>"
+            >
+                <?= htmlspecialchars($brand); ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
+    <?php if (count($brands) > 10): ?>
+        <button id="show-more-btn" class="btn btn-primary mt-3">
+            Show More <span>&#9660;</span>
+        </button>
+    <?php endif; ?>
     </section>
+
 
 
     <!-- search -->
@@ -268,6 +277,8 @@ $psuProducts = $stmt->fetchAll();
         });
     </script>
     <script src="js/app.js"></script>
+    <script src="js/script.js" defer></script>
+
 </body>
 
 </html>
