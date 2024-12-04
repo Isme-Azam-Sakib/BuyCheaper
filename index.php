@@ -79,9 +79,14 @@ $psuProducts = $stmt->fetchAll();
     <section class="hero-section">
         <div class="overlay"></div>
         <div class="hero-content">
-            <h1>Your build, Your decision</h1>
+            <h1>Buy Cheaper! Save Bigger!</h1>
             <p>Find & compare the best deals available</p>
-            <a href="#search" class="cta-button">Get Started</a>
+            <!-- search -->
+            <div class="search-container container">
+                <input type="text" id="search" placeholder="Search something (E.g. ryzen 7800X3D)" autocomplete="off">
+                <div id="results"></div> 
+            </div>
+            <!-- <a href="#search" class="cta-button">Get Started</a> -->
         </div>
     </section>
     <style>
@@ -96,12 +101,14 @@ $psuProducts = $stmt->fetchAll();
 
         .hero-section {
             position: relative;
-            width: 100%;
-            height: 100vh;
+            width: 96%;
+            height: 60vh;
             background: url('assets/pcbuild1.jpg') center/cover no-repeat;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 40px;
+            margin: 2% 2% 0 2%;
         }
 
         .overlay {
@@ -111,7 +118,7 @@ $psuProducts = $stmt->fetchAll();
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            /* Semi-transparent overlay */
+            border-radius: 40px;
             z-index: 1;
         }
 
@@ -140,47 +147,42 @@ $psuProducts = $stmt->fetchAll();
             font-size: 1.2rem;
             font-weight: 700;
             text-transform: capitalize;
-            background-color: #ff5722;
+            background-color: #7f45f3;
             color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             text-decoration: none;
+            transition: all 0.3s ease-in-out;
         }
 
         .cta-button:hover {
-            background-color: #e64a19;
+            background-color: #4b2793;
         }
     </style>
 
     <!-- Browse Brands Section -->
     <section class="browse-brands-section container mt-5">
-    <h2>Browse Brands</h2>
-    <div id="brand-list" class="d-flex flex-wrap gap-3">
-        <?php foreach ($brands as $index => $brand): ?>
-            <a 
-                href="/buyCheaper/public/brand_products.php?brand=<?= urlencode($brand); ?>" 
-                class="btn btn-outline-primary brand-item <?= $index >= 10 ? 'hidden-brand' : ''; ?>"
-            >
-                <?= htmlspecialchars($brand); ?>
-            </a>
-        <?php endforeach; ?>
-    </div>
-    <?php if (count($brands) > 10): ?>
-        <button id="show-more-btn" class="btn btn-primary mt-3">
-            Show More <span>&#9660;</span>
-        </button>
-    <?php endif; ?>
+        <h2>Browse Brands</h2>
+        <div id="brand-list" class="d-flex flex-wrap gap-3">
+            <?php foreach ($brands as $index => $brand): ?>
+                <a
+                    href="/buyCheaper/public/brand_products.php?brand=<?= urlencode($brand); ?>"
+                    class="brand-btn brand-item <?= $index >= 21 ? 'hidden-brand' : ''; ?>">
+                    <?= htmlspecialchars($brand); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php if (count($brands) > 12): ?>
+            <button id="show-more-btn" class=" mt-3">
+                Show More <span>&#9660;</span>
+            </button>
+        <?php endif; ?>
     </section>
 
 
 
-    <!-- search -->
-    <div class="search-container container">
-        <h2>Looking for a product? </h2>
-        <input type="text" id="search" placeholder="Search for any product..." autocomplete="off">
-        <div id="results"></div> <!-- This div will display the search results -->
-    </div>
+
 
     <!-- Recently Added Section -->
     <section class="recently-added-section container mt-5">
@@ -218,7 +220,7 @@ $psuProducts = $stmt->fetchAll();
 
     <!-- ram Carousel -->
     <div class="full-width">
-        <section class="product-container container mt-5" >
+        <section class="product-container container mt-5">
             <h2>Browse Rams</h2>
             <div class="search-results">
                 <?php foreach ($ramProducts as $product): ?>
@@ -276,8 +278,8 @@ $psuProducts = $stmt->fetchAll();
             });
         });
     </script>
-    <script src="js/app.js"></script>
-    <script src="js/scripts.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <!-- <script src="js/scripts.js" defer></script> -->
 
 </body>
 

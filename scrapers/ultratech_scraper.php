@@ -1,9 +1,9 @@
-<?php 
+<?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 include '../config/database.php';
-include '../includes/navbar.php'; 
+include '../includes/navbar.php';
 require '../includes/simple_html_dom.php';
 
 
@@ -29,7 +29,8 @@ $categoryIds = [
     'ssd' => 8
 ];
 
-function fetch_html_content($url){
+function fetch_html_content($url)
+{
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -54,15 +55,16 @@ function fetch_html_content($url){
 }
 
 
-function generateStandardName($productName) {
+function generateStandardName($productName)
+{
     $standard_name = strtolower($productName);
     $standard_name = preg_replace('/[^a-z0-9\s\-\/\.]/', '', $standard_name);
     $standard_name = str_replace(['-', '/', '|'], ' ', $standard_name);
     $keywords = [
-        'gaming', 'processor', 'core', 'intel', 'amd', 'gen', 'series', 'edition', 'liquid', 
-        'cooler', 'new', 'latest', 'ultra', 'pro', 'max', 'super', 'rgb', 'mm', 'aio', 
+        'gaming', 'processor', 'gen', 'series', 'edition', 'liquid', 
+        'cooler', 'new', 'latest', 'ultra', 'pro', 'max', 'rgb', 'mm', 'aio', 
         'desktop', 'laptop', 'graphics', 'card', 'cool', 'power', 'supply', 'ram', 
-        'ssd', 'tb', 'gb', 'hz', 'mhz', 'fps'
+        'ssd', 'fps'
     ];
     foreach ($keywords as $word) {
         $standard_name = preg_replace('/\b' . preg_quote($word, '/') . '\b/', '', $standard_name);
@@ -76,8 +78,9 @@ function generateStandardName($productName) {
 
 
 
-function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand) {
- 
+function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand)
+{
+
     $scrapedStandardName = generateStandardName($productName);
 
     $stmt = $pdo->prepare("SELECT id, standard_name FROM all_products WHERE categoryId = :categoryId");
@@ -113,19 +116,17 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
     $existingProduct = $stmt->fetch();
 
     if ($existingProduct) {
-        $stmt = $pdo->prepare("UPDATE products SET productName = :productName, productImage = :productImage, description = :description WHERE productId = :productId");
+        $stmt = $pdo->prepare("UPDATE products SET productName = :productName,  description = :description WHERE productId = :productId");
         $stmt->execute([
             ':productName' => $productName,
-            ':productImage' => $productImage,
             ':description' => $description,
             ':productId' => $productId
         ]);
     } else {
-        $stmt = $pdo->prepare("INSERT INTO products (productId, productName, productImage, categoryId, description) VALUES (:productId, :productName, :productImage, :categoryId, :description)");
+        $stmt = $pdo->prepare("INSERT INTO products (productId, productName, categoryId, description) VALUES (:productId, :productName,  :categoryId, :description)");
         $stmt->execute([
             ':productId' => $productId,
             ':productName' => $productName,
-            ':productImage' => $productImage,
             ':categoryId' => $categoryId,
             ':description' => $description
         ]);
@@ -155,7 +156,8 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
     }
 }
 
-function isMatch($scrapedStandardName, $existingStandardName) {
+function isMatch($scrapedStandardName, $existingStandardName)
+{
     $scrapedKeywords = explode(' ', $scrapedStandardName);
     $existingKeywords = explode(' ', $existingStandardName);
 
@@ -171,7 +173,8 @@ function isMatch($scrapedStandardName, $existingStandardName) {
 }
 
 
-function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
+function scrapeCategory($url, $pdo, $categoryId, $vendorId)
+{
     $page = 1;
     $vendorId = 5;
 
@@ -216,7 +219,6 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
 // Loop through categories
 foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];
-    scrapeCategory($url, $pdo, $categoryId, 5); 
+    scrapeCategory($url, $pdo, $categoryId, 5);
+    
 }
-?>
-

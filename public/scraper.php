@@ -18,7 +18,7 @@ include '../includes/navbar.php'; ?>
     <?php
     $vendors = [
         ['name' => 'Startech', 'image' => '../assets/startech.png', 'scraper' => '../scrapers/startech_scraper.php'],
-        ['name' => 'Ryans', 'image' => '../assets/ryans.png', 'scraper' => '../scrapers/ryans_scraper.php'],
+        // ['name' => 'Ryans', 'image' => '../assets/ryans.png', 'scraper' => '../scrapers/ryans_scraper.php'],
         ['name' => 'Techland', 'image' => '../assets/techland.png', 'scraper' => '../scrapers/techland_scraper.php'],
         ['name' => 'Skyland', 'image' => '../assets/skyland.png', 'scraper' => '../scrapers/skyland_scraper.php'],
         ['name' => 'Ultratech', 'image' => '../assets/ultratech.png', 'scraper' => '../scrapers/ultratech_scraper.php'],

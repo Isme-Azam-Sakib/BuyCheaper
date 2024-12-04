@@ -60,10 +60,10 @@ function generateStandardName($productName) {
     $standard_name = preg_replace('/[^a-z0-9\s\-\/\.]/', '', $standard_name);
     $standard_name = str_replace(['-', '/', '|'], ' ', $standard_name);
     $keywords = [
-        'gaming', 'processor', 'core', 'intel', 'amd', 'gen', 'series', 'edition', 'liquid', 
-        'cooler', 'new', 'latest', 'ultra', 'pro', 'max', 'super', 'rgb', 'mm', 'aio', 
+        'gaming', 'processor', 'gen', 'series', 'edition', 'liquid', 
+        'cooler', 'new', 'latest', 'ultra', 'pro', 'max', 'rgb', 'mm', 'aio', 
         'desktop', 'laptop', 'graphics', 'card', 'cool', 'power', 'supply', 'ram', 
-        'ssd', 'tb', 'gb', 'hz', 'mhz', 'fps'
+        'ssd', 'fps'
     ];
     foreach ($keywords as $word) {
         $standard_name = preg_replace('/\b' . preg_quote($word, '/') . '\b/', '', $standard_name);
@@ -77,7 +77,6 @@ function generateStandardName($productName) {
 
 
 
-// Improved database operations
 function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand) {
     // Generate the standard name for the scraped product
     $scrapedStandardName = generateStandardName($productName);
@@ -92,18 +91,15 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
         $existingStandardName = $product['standard_name'];
         $existingId = $product['id'];
 
-        // Check if the scraped standard name contains terms from the existing standard name
         if (isMatch($scrapedStandardName, $existingStandardName)) {
             $matchedProductId = $existingId;
             break;
         }
     }
 
-    // Step 2: Handle products in all_products and products tables
     if ($matchedProductId) {
         $productId = $matchedProductId;
     } else {
-        // If no match, insert new product into all_products
         $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
         $stmt->execute([
             ':standard_name' => $scrapedStandardName,
@@ -113,7 +109,6 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
         $productId = $pdo->lastInsertId();
     }
 
-    // Step 3: Check or add/update in products table
     $stmt = $pdo->prepare("SELECT productId FROM products WHERE productId = :productId");
     $stmt->execute([':productId' => $productId]);
     $existingProduct = $stmt->fetch();
@@ -136,7 +131,6 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
         ]);
     }
 
-    // Step 4: Handle vendor prices
     $stmt = $pdo->prepare("SELECT * FROM vendor_prices WHERE productId = :productId AND vendorId = :vendorId");
     $stmt->execute([':productId' => $productId, ':vendorId' => $vendorId]);
     $existingPrice = $stmt->fetch();
@@ -160,7 +154,6 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
     }
 }
 
-// Function to determine if scraped product matches an existing product
 function isMatch($scrapedStandardName, $existingStandardName) {
     $scrapedKeywords = explode(' ', $scrapedStandardName);
     $existingKeywords = explode(' ', $existingStandardName);

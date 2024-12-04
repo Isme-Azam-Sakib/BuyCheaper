@@ -1,6 +1,6 @@
 /* Basic resets and layout */
 :root {
-    --accent-color: #ff5e00; /* Set the accent color here */
+    --accent-color: #7f45f3; /* Set the accent color here */
 }
 
 * {
@@ -47,8 +47,9 @@ body {
     padding: 10px 15px;
     font-size: 1.2em;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 35px;
     outline: none;
+    background: #ffffffc2;
 }
 
 #search:focus {
@@ -102,6 +103,14 @@ body {
     padding: 10px;
     color: #666;
     text-align: center;
+}
+
+#results {
+    display: none; /* Default state: hidden */
+}
+
+#results:not(.hidden) {
+    display: block; /* Show when not hidden */
 }
 
 /* Featured Products */
@@ -819,10 +828,27 @@ body {
     transition: all 0.3s ease;
     border: none;
     cursor: pointer;
+    background-color: var(--accent-color);
+    padding: 10px 20px;
+    border-radius: 10px;
 }
 #show-more-btn:hover {
-    background-color: #0056b3;
+    background-color: var(--accent-color);
+    opacity: 0.8;
     color: #fff;
+}
+
+.brand-btn{
+    border: solid 1px var(--accent-color);
+    padding: 10px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #2c2d42;
+    transition: all 0.3s ease-in-out;
+}
+.brand-btn:hover{
+    background-color: var(--accent-color);
+    color: #ffffff;
 }
 
 /* Style for product container */
@@ -846,7 +872,7 @@ body {
 .compare-price-button {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #ff6f61;
+    background-color: #7f45f3;
     color: #fff;
     text-align: center;
     text-decoration: none;
@@ -861,7 +887,7 @@ body {
 }
 
 .compare-price-button:hover {
-    background-color: #e65a50; /* Darker shade on hover */
+    background-color: #6737c7; /* Darker shade on hover */
     transform: translateY(-2px); /* Slight lift on hover */
 }
 
