@@ -80,34 +80,70 @@ function generateStandardName($productName)
 
 function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand)
 {
-
     $scrapedStandardName = generateStandardName($productName);
 
-    $stmt = $pdo->prepare("SELECT id, standard_name FROM all_products WHERE categoryId = :categoryId");
-    $stmt->execute([':categoryId' => $categoryId]);
-    $allProducts = $stmt->fetchAll();
+    // First, try to find an exact match by standard_name and categoryId
+    $stmt = $pdo->prepare("SELECT id FROM all_products WHERE standard_name = :standard_name AND categoryId = :categoryId");
+    $stmt->execute([
+        ':standard_name' => $scrapedStandardName,
+        ':categoryId' => $categoryId
+    ]);
+    $exactMatch = $stmt->fetch();
 
-    $matchedProductId = null;
-    foreach ($allProducts as $product) {
-        $existingStandardName = $product['standard_name'];
-        $existingId = $product['id'];
-
-        if (isMatch($scrapedStandardName, $existingStandardName)) {
-            $matchedProductId = $existingId;
-            break;
-        }
-    }
-
-    if ($matchedProductId) {
-        $productId = $matchedProductId;
+    if ($exactMatch) {
+        $productId = $exactMatch['id'];
     } else {
-        $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
-        $stmt->execute([
-            ':standard_name' => $scrapedStandardName,
-            ':categoryId' => $categoryId,
-            ':brand' => $brand
-        ]);
-        $productId = $pdo->lastInsertId();
+        // If no exact match, look for similar products
+        $stmt = $pdo->prepare("SELECT id, standard_name FROM all_products WHERE categoryId = :categoryId");
+        $stmt->execute([':categoryId' => $categoryId]);
+        $allProducts = $stmt->fetchAll();
+
+        $matchedProductId = null;
+        foreach ($allProducts as $product) {
+            if (isMatch($scrapedStandardName, $product['standard_name'])) {
+                $matchedProductId = $product['id'];
+                break;
+            }
+        }
+
+        if ($matchedProductId) {
+            $productId = $matchedProductId;
+        } else {
+            // Generate a unique identifier using time to ensure uniqueness
+            $timestamp = time();
+            $uniqueStandardName = $scrapedStandardName . '-' . $brand . '-' . $categoryId . '-' . $timestamp;
+            
+            // Try to insert with retries in case of collision
+            $maxRetries = 3;
+            $retry = 0;
+            $success = false;
+            
+            while (!$success && $retry < $maxRetries) {
+                try {
+                    $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
+                    $stmt->execute([
+                        ':standard_name' => $uniqueStandardName,
+                        ':categoryId' => $categoryId,
+                        ':brand' => $brand
+                    ]);
+                    $success = true;
+                    $productId = $pdo->lastInsertId();
+                } catch (PDOException $e) {
+                    if ($e->getCode() == '23000') { // Duplicate entry
+                        $timestamp = time(); // Get new timestamp
+                        $uniqueStandardName = $scrapedStandardName . '-' . $brand . '-' . $categoryId . '-' . $timestamp;
+                        $retry++;
+                    } else {
+                        throw $e; // Re-throw if it's not a duplicate entry error
+                    }
+                }
+            }
+            
+            if (!$success) {
+                error_log("Failed to insert product after $maxRetries retries: $productName");
+                return; // Skip this product if we can't insert it
+            }
+        }
     }
 
     // Step 3: Check or add/update in products table
@@ -176,32 +212,27 @@ function isMatch($scrapedStandardName, $existingStandardName)
 function scrapeCategory($url, $pdo, $categoryId, $vendorId)
 {
     $page = 1;
-    $vendorId = 5;
-
     do {
+        $htmlContent = fetch_html_content($url . "?page=" . $page);
+        if (!$htmlContent) break;
+
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-
-        $htmlContent = fetch_html_content($url . "?page=" . $page);
-
-        if (!$dom->loadHTML($htmlContent)) {
-            echo "Failed to parse HTML content.";
-            return;
-        }
-
+        $dom->loadHTML($htmlContent);
         $xpath = new DOMXPath($dom);
         $products = $xpath->query("//div[contains(@class, 'product-layout')]");
 
         $productsFound = false;
         foreach ($products as $product) {
-            $productName = $xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->nodeValue ?? 'N/A';
+            $productName = trim($xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->nodeValue ?? 'N/A');
             $brand = strtok($productName, ' ');
-            $productUrl = $xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->getAttribute('href') ?? '';
-            $productImage = $xpath->query(".//div[contains(@class, 'image')]//img", $product)->item(0)->getAttribute('src') ?? '';
-            $description = $xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description';
-            $newPrice = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-new')]", $product)->item(0)->nodeValue ?? 'N/A';
-            $productPrice = str_replace(',', '', $newPrice);
-            $productPrice = floatval($productPrice);
+            $productUrl = trim($xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->getAttribute('href') ?? '');
+            $productImage = trim($xpath->query(".//div[contains(@class, 'image')]//img", $product)->item(0)->getAttribute('src') ?? '');
+            $description = trim($xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description');
+            $newPrice = trim($xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-new')]", $product)->item(0)->nodeValue ?? 'N/A');
+            $productPrice = floatval(str_replace(',', '', $newPrice));
+
+            // Maintain Ultratech's specific checks
             if ($productPrice == 0 || stripos($description, 'Upcoming') !== false || stripos($description, 'Out of Stock') !== false) {
                 continue;
             }
@@ -211,14 +242,12 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId)
                 $productsFound = true;
             }
         }
-
         $page++;
     } while ($productsFound);
 }
 
-// Loop through categories
+// Update the main loop to use correct vendor ID
 foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];
-    scrapeCategory($url, $pdo, $categoryId, 5);
-    
+    scrapeCategory($url, $pdo, $categoryId, 5); // Using vendor ID 5 for Ultratech
 }

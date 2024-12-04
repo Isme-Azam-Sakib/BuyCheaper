@@ -9,6 +9,11 @@ function redirectToProduct(productId) {
     window.location.href = `/buyCheaper/public/product_details.php?id=${productId}`;
 }
 
+function viewMore(query) {
+    // Redirect to search results page with the query
+    window.location.href = `/buyCheaper/public/search_results.php?query=${encodeURIComponent(query)}`;
+}
+
 function initSearch() {
     const searchInput = document.getElementById('search');
     const searchResults = document.getElementById('results');
@@ -53,19 +58,25 @@ function initSearch() {
     });
 
     searchInput.addEventListener('keydown', function (event) {
+        console.log('Key pressed:', event.key);
         if (event.key === 'Enter') {
             const query = searchInput.value.trim();
-            if (query) viewMore(query);
+            console.log('Query value:', query);
+            if (query) {
+                console.log('Calling viewMore with query:', query);
+                viewMore(query);
+            }
         }
     });
 }
-
 
 function initShowMoreButton() {
     const showMoreBtn = document.getElementById('show-more-btn');
     const hiddenBrands = document.querySelectorAll('.hidden-brand');
 
     if (!showMoreBtn || hiddenBrands.length === 0) return;
+
+    showMoreBtn.style.display = 'block';
 
     showMoreBtn.addEventListener('click', () => {
         hiddenBrands.forEach(brand => brand.classList.toggle('hidden-brand'));
