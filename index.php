@@ -296,7 +296,7 @@ $psuProducts = $stmt->fetchAll();
         <div class="search-results">
             <?php foreach ($cpuProducts as $product): ?>
                 <div class="search-result-item">
-                    <img src="/buyCheaper/public/proxy_image.php?url=<?= urlencode($product['productImage']); ?>" 
+                    <img src="<?= htmlspecialchars($product['productImage']); ?>" 
                          alt="<?= htmlspecialchars($product['productName']); ?>">
                     <div class="content-wrapper">
                         <h2><?= htmlspecialchars($product['productName']); ?></h2>
@@ -316,7 +316,7 @@ $psuProducts = $stmt->fetchAll();
             <div class="search-results">
                 <?php foreach ($ramProducts as $product): ?>
                     <div class="search-result-item">
-                        <img src="/buyCheaper/public/proxy_image.php?url=<?= urlencode($product['productImage']); ?>" 
+                        <img src="<?= htmlspecialchars($product['productImage']); ?>" 
                              alt="<?= htmlspecialchars($product['productName']); ?>">
                         <div class="content-wrapper">
                             <h2><?= htmlspecialchars($product['productName']); ?></h2>
@@ -338,7 +338,7 @@ $psuProducts = $stmt->fetchAll();
         <div class="search-results">
             <?php foreach ($psuProducts as $product): ?>
                 <div class="search-result-item">
-                    <img src="/buyCheaper/public/proxy_image.php?url=<?= urlencode($product['productImage']); ?>" 
+                    <img src="<?= htmlspecialchars($product['productImage']); ?>" 
                          alt="<?= htmlspecialchars($product['productName']); ?>">
                     <div class="content-wrapper">
                         <h2><?= htmlspecialchars($product['productName']); ?></h2>

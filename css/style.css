@@ -639,18 +639,17 @@ body {
     text-align: center;
     background-color: #f9f9f9;
     position: relative;
-    
 }
 .scraper-card img {
     max-width: 100px;
     height: auto;
     margin-bottom: 10px;
 }
-.scraper-card-container .scraper-card h3{
-    padding-bottom: 30px;
+.scraper-card h3 {
+    padding-bottom: 15px;
 }
 .scraper-card button {
-    display: inline;
+    display: inline-block;
     border: none;
     background-color: var(--accent-color);
     color: #ffffff;
@@ -658,15 +657,12 @@ body {
     cursor: pointer;
     border-radius: 5px;
     transition: all ease 0.3s;
-    position: absolute;
-    bottom: 2%;
-    left: 2%;
-    width: 96%;
+    width: 100%;
+    position: static;
 }
 
 .scraper-card button:hover{
     background-color: var(--accent-color);
-
 }
 
 
@@ -951,4 +947,65 @@ product comparison
 product comparison
 =================== */
 
+.button-container {
+    display: flex;
+    flex-direction: row;  /* Changed from column to row */
+    gap: 10px;
+    justify-content: center;  /* Center the buttons horizontally */
+}
 
+.button-container form {
+    margin: 0;  /* Remove any default form margins */
+}
+
+.clear-btn {
+    background-color: #dc3545 !important;
+}
+
+.clear-btn:hover {
+    background-color: #c82333 !important;
+}
+/* ===========================
+        build pc
+=========================== */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.pc-builder {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.component {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.price {
+    font-weight: bold;
+    color: #27ae60;
+}
+
+.total-cost h2 {
+    text-align: center;
+    color: #2980b9;
+}

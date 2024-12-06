@@ -11,6 +11,7 @@
             <li><a href="/buyCheaper/public/scraper.php">Scrapers</a></li>
         <?php endif; ?>
         <li><a href="/buyCheaper/public/compare.php"><i class="fas fa-balance-scale"></i> Compare</a></li>
+        <li><a href="/buyCheaper/public/buildpc.php">Build PC</a></li>
         <?php if (!isset($_SESSION['admin_logged_in'])): ?>
             <li><a href="/buyCheaper/public/login.php">Login</a></li>
         <?php else: ?>

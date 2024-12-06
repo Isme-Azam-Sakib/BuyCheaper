@@ -184,12 +184,21 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
 
         $productsFound = false;
         foreach ($products as $product) {
-            if (strpos($product->getAttribute('class'), 'out-of-stock') !== false) continue;
+            if ($product instanceof DOMElement && strpos($product->getAttribute('class'), 'out-of-stock') !== false) continue;
 
             $productName = trim($xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->nodeValue ?? 'N/A');
             $brand = strtok($productName, ' ');
             $productUrl = trim($xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->getAttribute('href') ?? '');
             $productImage = trim($xpath->query(".//div[contains(@class, 'image')]//img", $product)->item(0)->getAttribute('src') ?? '');
+            if ($productImage) {
+                // Replace .jpg with .webp and add the correct path structure
+                $productImage = preg_replace('/\/catalog\//', '/wp/gj/', $productImage);
+                $productImage = preg_replace('/\.jpg$/', '.webp', $productImage);
+                
+                if (!str_starts_with($productImage, 'http')) {
+                    $productImage = 'https://www.skyland.com.bd' . $productImage;
+                }
+            }
             $description = trim($xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description');
             $priceNode = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-new')]", $product)->item(0);
             $productPrice = $priceNode ? floatval(str_replace(',', '', preg_replace('/[^\d.]/', '', $priceNode->nodeValue))) : 0;

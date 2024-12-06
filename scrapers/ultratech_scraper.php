@@ -61,10 +61,31 @@ function generateStandardName($productName)
     $standard_name = preg_replace('/[^a-z0-9\s\-\/\.]/', '', $standard_name);
     $standard_name = str_replace(['-', '/', '|'], ' ', $standard_name);
     $keywords = [
-        'gaming', 'processor', 'gen', 'series', 'edition', 'liquid', 
-        'cooler', 'new', 'latest', 'ultra', 'pro', 'max', 'rgb', 'mm', 'aio', 
-        'desktop', 'laptop', 'graphics', 'card', 'cool', 'power', 'supply', 'ram', 
-        'ssd', 'fps'
+        'gaming',
+        'processor',
+        'gen',
+        'series',
+        'edition',
+        'liquid',
+        'cooler',
+        'new',
+        'latest',
+        'ultra',
+        'pro',
+        'max',
+        'rgb',
+        'mm',
+        'aio',
+        'desktop',
+        'laptop',
+        'graphics',
+        'card',
+        'cool',
+        'power',
+        'supply',
+        'ram',
+        'ssd',
+        'fps'
     ];
     foreach ($keywords as $word) {
         $standard_name = preg_replace('/\b' . preg_quote($word, '/') . '\b/', '', $standard_name);
@@ -112,12 +133,12 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
             // Generate a unique identifier using time to ensure uniqueness
             $timestamp = time();
             $uniqueStandardName = $scrapedStandardName . '-' . $brand . '-' . $categoryId . '-' . $timestamp;
-            
+
             // Try to insert with retries in case of collision
             $maxRetries = 3;
             $retry = 0;
             $success = false;
-            
+
             while (!$success && $retry < $maxRetries) {
                 try {
                     $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
@@ -138,7 +159,7 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
                     }
                 }
             }
-            
+
             if (!$success) {
                 error_log("Failed to insert product after $maxRetries retries: $productName");
                 return; // Skip this product if we can't insert it
@@ -152,19 +173,21 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
     $existingProduct = $stmt->fetch();
 
     if ($existingProduct) {
-        $stmt = $pdo->prepare("UPDATE products SET productName = :productName,  description = :description WHERE productId = :productId");
+        $stmt = $pdo->prepare("UPDATE products SET productName = :productName, description = :description, productImage = :productImage WHERE productId = :productId");
         $stmt->execute([
             ':productName' => $productName,
             ':description' => $description,
+            ':productImage' => $productImage,
             ':productId' => $productId
         ]);
     } else {
-        $stmt = $pdo->prepare("INSERT INTO products (productId, productName, categoryId, description) VALUES (:productId, :productName,  :categoryId, :description)");
+        $stmt = $pdo->prepare("INSERT INTO products (productId, productName, categoryId, description, productImage) VALUES (:productId, :productName, :categoryId, :description, :productImage)");
         $stmt->execute([
             ':productId' => $productId,
             ':productName' => $productName,
             ':categoryId' => $categoryId,
-            ':description' => $description
+            ':description' => $description,
+            ':productImage' => $productImage
         ]);
     }
 
@@ -209,8 +232,7 @@ function isMatch($scrapedStandardName, $existingStandardName)
 }
 
 
-function scrapeCategory($url, $pdo, $categoryId, $vendorId)
-{
+function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
     $page = 1;
     do {
         $htmlContent = fetch_html_content($url . "?page=" . $page);
@@ -224,6 +246,8 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId)
 
         $productsFound = false;
         foreach ($products as $product) {
+            if (strpos($product->getAttribute('class'), 'out-of-stock') !== false) continue;
+
             $productName = trim($xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->nodeValue ?? 'N/A');
             $brand = strtok($productName, ' ');
             $productUrl = trim($xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->getAttribute('href') ?? '');
@@ -231,11 +255,6 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId)
             $description = trim($xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description');
             $newPrice = trim($xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-new')]", $product)->item(0)->nodeValue ?? 'N/A');
             $productPrice = floatval(str_replace(',', '', $newPrice));
-
-            // Maintain Ultratech's specific checks
-            if ($productPrice == 0 || stripos($description, 'Upcoming') !== false || stripos($description, 'Out of Stock') !== false) {
-                continue;
-            }
 
             if ($productPrice > 0) {
                 handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand);
@@ -245,6 +264,7 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId)
         $page++;
     } while ($productsFound);
 }
+
 
 // Update the main loop to use correct vendor ID
 foreach ($categories as $category => $url) {

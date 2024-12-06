@@ -54,58 +54,59 @@ function fetch_html_content($url)
     curl_close($ch);
 }
 
-
-function generateStandardName($productName)
-{
+function generateStandardName($productName) {
     $standard_name = strtolower($productName);
-    $standard_name = preg_replace('/[^a-z0-9\s\-\/\.]/', '', $standard_name);
-    $standard_name = str_replace(['-', '/', '|'], ' ', $standard_name);
-    $keywords = [
-        'gaming', 'processor', 'gen', 'series', 'edition', 'liquid', 
-        'cooler', 'new', 'latest', 'ultra', 'pro', 'max', 'rgb', 'mm', 'aio', 
-        'desktop', 'laptop', 'graphics', 'card', 'cool', 'power', 'supply', 'ram', 
-        'ssd', 'fps'
+    $standard_name = preg_replace('/[^a-z0-9\s\-]/', '', $standard_name);
+    $standard_name = str_replace(['-', '/'], ' ', $standard_name);
+
+    $ignoreWords = [
+        'gaming', 'processor', 'gen', 'series', 'edition', 'liquid', 'cooler',
+        'rgb', 'fps', 'max', 'ultra', 'desktop', 'laptop', 'power', 'supply', 
+        'ssd', 'ram', 'hz', 'mhz', 'gb', 'tb', 'cl', 'aio', 'cool'
     ];
-    foreach ($keywords as $word) {
-        $standard_name = preg_replace('/\b' . preg_quote($word, '/') . '\b/', '', $standard_name);
-    }
 
-    $standard_name = preg_replace('/(\d+\s?(gb|tb|hz|mhz))/', ' $1 ', $standard_name);
-    $standard_name = trim(preg_replace('/\s+/', ' ', $standard_name));
-
-    return $standard_name;
+    $standard_name = preg_replace('/\b(' . implode('|', $ignoreWords) . ')\b/', '', $standard_name);
+    return trim(preg_replace('/\s+/', ' ', $standard_name));
 }
 
 function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand) {
-    // Generate the standard name for the scraped product
     $scrapedStandardName = generateStandardName($productName);
 
-    // Step 1: Search for potential matches in all_products
-    $stmt = $pdo->prepare("SELECT id, standard_name FROM all_products WHERE categoryId = :categoryId");
-    $stmt->execute([':categoryId' => $categoryId]);
-    $allProducts = $stmt->fetchAll();
+    $stmt = $pdo->prepare("SELECT id FROM all_products WHERE standard_name = :standard_name AND categoryId = :categoryId");
+    $stmt->execute([
+        ':standard_name' => $scrapedStandardName,
+        ':categoryId' => $categoryId
+    ]);
+    $existingProduct = $stmt->fetch();
 
-    $matchedProductId = null;
-    foreach ($allProducts as $product) {
-        $existingStandardName = $product['standard_name'];
-        $existingId = $product['id'];
-
-        if (isMatch($scrapedStandardName, $existingStandardName)) {
-            $matchedProductId = $existingId;
-            break;
-        }
-    }
-
-    if ($matchedProductId) {
-        $productId = $matchedProductId;
+    if ($existingProduct) {
+        $productId = $existingProduct['id'];
     } else {
-        $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
-        $stmt->execute([
-            ':standard_name' => $scrapedStandardName,
-            ':categoryId' => $categoryId,
-            ':brand' => $brand
-        ]);
-        $productId = $pdo->lastInsertId();
+        $stmt = $pdo->prepare("SELECT id, standard_name FROM all_products WHERE categoryId = :categoryId");
+        $stmt->execute([':categoryId' => $categoryId]);
+        $allProducts = $stmt->fetchAll();
+
+        $matchedProductId = null;
+        foreach ($allProducts as $product) {
+            if (isMatch($scrapedStandardName, $product['standard_name'])) {
+                $matchedProductId = $product['id'];
+                break;
+            }
+        }
+
+        if ($matchedProductId) {
+            $productId = $matchedProductId;
+        } else {
+            $uniqueStandardName = $scrapedStandardName . '-' . md5($productName . $brand . microtime());
+            
+            $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
+            $stmt->execute([
+                ':standard_name' => $uniqueStandardName,
+                ':categoryId' => $categoryId,
+                ':brand' => $brand
+            ]);
+            $productId = $pdo->lastInsertId();
+        }
     }
 
     $stmt = $pdo->prepare("SELECT productId FROM products WHERE productId = :productId");
@@ -157,18 +158,16 @@ function isMatch($scrapedStandardName, $existingStandardName) {
     $scrapedKeywords = explode(' ', $scrapedStandardName);
     $existingKeywords = explode(' ', $existingStandardName);
 
-    // Check if at least 75% of the existing keywords appear in the scraped product
     $matchedCount = 0;
     foreach ($existingKeywords as $word) {
         if (in_array($word, $scrapedKeywords)) {
             $matchedCount++;
         }
     }
-    
-    $threshold = 0.85;
+
+    $threshold = 0.9;
     return ($matchedCount / count($existingKeywords)) >= $threshold;
 }
-
 
 function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
     $page = 1;
@@ -184,13 +183,13 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
 
         $productsFound = false;
         foreach ($products as $product) {
-            if (strpos($product->getAttribute('class'), 'out-of-stock') !== false) continue;
+            if ($product instanceof DOMElement && strpos($product->getAttribute('class'), 'out-of-stock') !== false) continue;
 
-            $productName = $xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->nodeValue ?? 'N/A';
+            $productName = trim($xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->nodeValue ?? 'N/A');
             $brand = strtok($productName, ' ');
-            $productUrl = $xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->getAttribute('href');
-            $productImage = $xpath->query(".//div[contains(@class, 'image')]//img", $product)->item(0)->getAttribute('src');
-            $description = $xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description';
+            $productUrl = trim($xpath->query(".//div[contains(@class, 'name')]/a", $product)->item(0)->getAttribute('href') ?? '');
+            $productImage = trim($xpath->query(".//div[contains(@class, 'image')]//img", $product)->item(0)->getAttribute('src') ?? '');
+            $description = trim($xpath->query(".//div[contains(@class, 'description')]", $product)->item(0)->nodeValue ?? 'No description');
             $priceNode = $xpath->query(".//div[contains(@class, 'price')]//span[contains(@class, 'price-new')]", $product)->item(0);
             $productPrice = $priceNode ? floatval(str_replace(',', '', preg_replace('/[^\d.]/', '', $priceNode->nodeValue))) : 0;
 
@@ -202,8 +201,6 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
         $page++;
     } while ($productsFound);
 }
-
-
 
 foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];

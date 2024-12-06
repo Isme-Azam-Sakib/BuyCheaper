@@ -145,3 +145,34 @@ function initGlobalProductSearch() {
         });
     });
 }
+
+
+// pc builder
+$(document).ready(function () {
+    function fetchComponents(categoryId, dropdown) {
+        $.get('../includes/fetch_components.php', { categoryId: categoryId }, function (data) {
+            const products = JSON.parse(data);
+            dropdown.empty().append('<option value="">Select an option</option>');
+            products.forEach(product => {
+                dropdown.append(`<option value="${product.productId}" data-price="${product.price}">${product.productName}</option>`);
+            });
+        });
+    }
+
+    $('.component-select').each(function () {
+        const categoryId = $(this).data('category');
+        fetchComponents(categoryId, $(this));
+    });
+
+    $('.component-select').on('change', function () {
+        const price = $(this).find(':selected').data('price') || 0;
+        const priceId = `#${$(this).attr('id')}-price`;
+        $(priceId).text(price);
+
+        let total = 0;
+        $('.price').each(function () {
+            total += parseFloat($(this).text());
+        });
+        $('#total-cost').text(total.toFixed(2));
+    });
+});
