@@ -9,11 +9,6 @@ function redirectToProduct(productId) {
     window.location.href = `/buyCheaper/public/product_details.php?id=${productId}`;
 }
 
-function viewMore(query) {
-    // Redirect to search results page with the query
-    window.location.href = `/buyCheaper/public/search_results.php?query=${encodeURIComponent(query)}`;
-}
-
 function initSearch() {
     const searchInput = document.getElementById('search');
     const searchResults = document.getElementById('results');
@@ -58,25 +53,19 @@ function initSearch() {
     });
 
     searchInput.addEventListener('keydown', function (event) {
-        console.log('Key pressed:', event.key);
         if (event.key === 'Enter') {
             const query = searchInput.value.trim();
-            console.log('Query value:', query);
-            if (query) {
-                console.log('Calling viewMore with query:', query);
-                viewMore(query);
-            }
+            if (query) viewMore(query);
         }
     });
 }
+
 
 function initShowMoreButton() {
     const showMoreBtn = document.getElementById('show-more-btn');
     const hiddenBrands = document.querySelectorAll('.hidden-brand');
 
     if (!showMoreBtn || hiddenBrands.length === 0) return;
-
-    showMoreBtn.style.display = 'block';
 
     showMoreBtn.addEventListener('click', () => {
         hiddenBrands.forEach(brand => brand.classList.toggle('hidden-brand'));
@@ -86,41 +75,104 @@ function initShowMoreButton() {
     });
 }
 
+function selectProduct(column, productId) {
+    fetch(`/buyCheaper/includes/getProductDetails.php?productId=${productId}`)
+        .then(response => response.json())
+        .then(product => {
+            // Set Product Image
+            document.querySelector(`#image-${column}`).innerHTML = `
+                <img src="${product.image}" alt="${product.name}">
+            `;
+
+            // Set Product Name
+            document.querySelector(`#name-${column}`).textContent = product.name;
+
+            // Set Vendor
+            document.querySelector(`#vendor-${column}`).innerHTML = `
+                <img src="${product.vendor_logo}" alt="${product.vendor_name}">
+            `;
+
+            // Set Lowest Price
+            document.querySelector(`#price-${column}`).textContent = `৳${product.lowest_price}`;
+
+            // Set Model (remove first word)
+            const model = product.name.split(' ').slice(1).join(' ');
+            document.querySelector(`#model-${column}`).textContent = model;
+
+            // Set Brand (first word)
+            const brand = product.name.split(' ')[0];
+            document.querySelector(`#brand-${column}`).textContent = brand;
+
+            // Set Summary
+            document.querySelector(`#summary-${column}`).textContent = product.description;
+        })
+        .catch(error => console.error('Error:', error));
+}
+
 function initComparisonSearch() {
     document.querySelectorAll('.product-search').forEach(input => {
-        input.addEventListener('input', function () {
-            const column = this.getAttribute('data-column');
-            const query = this.value.trim();
+        const column = input.getAttribute('data-column');
+        const resultsContainer = document.createElement('div');
+        resultsContainer.className = 'search-results-container';
+        resultsContainer.id = `search-results-${column}`;
+        input.parentNode.appendChild(resultsContainer);
 
+        input.addEventListener('input', function() {
+            const query = this.value.trim();
+            
             if (query.length > 2) {
                 fetch('/buyCheaper/includes/search.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ query, comparison: 'true' })
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        query: query,
+                        comparison: 'true'
+                    })
                 })
                 .then(response => response.json())
                 .then(data => {
-                    const resultsDiv = document.querySelector(`#column-${column} .product-details`);
+                    const resultsDiv = document.getElementById(`search-results-${column}`);
                     resultsDiv.innerHTML = '';
 
                     if (data.message) {
-                        resultsDiv.innerHTML = `<p>${data.message}</p>`;
+                        resultsDiv.innerHTML = `<div class="no-results">${data.message}</div>`;
                     } else {
                         data.forEach(product => {
-                            const productDiv = document.createElement('div');
-                            productDiv.classList.add('product-result');
-                            productDiv.innerHTML = `
+                            const resultItem = document.createElement('div');
+                            resultItem.className = 'search-result-item';
+                            resultItem.innerHTML = `
                                 <img src="${product.image}" alt="${product.name}">
-                                <p>${product.name} - ৳${product.lowestPrice}</p>
+                                <div class="result-details">
+                                    <div class="product-name">${product.name}</div>
+                                    <div class="product-price">৳${product.lowestPrice}</div>
+                                </div>
                             `;
-                            productDiv.addEventListener('click', () => selectProduct(column, product.productId));
-                            resultsDiv.appendChild(productDiv);
+                            
+                            resultItem.addEventListener('click', () => {
+                                selectProduct(column, product.productId);
+                                resultsDiv.innerHTML = '';
+                                input.value = product.name;
+                            });
+                            
+                            resultsDiv.appendChild(resultItem);
                         });
                     }
+                    resultsDiv.style.display = 'block';
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Search error:', error);
+                });
             } else {
-                document.querySelector(`#column-${column} .product-details`).innerHTML = '';
+                document.getElementById(`search-results-${column}`).style.display = 'none';
+            }
+        });
+
+        // Hide results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !document.getElementById(`search-results-${column}`).contains(e.target)) {
+                document.getElementById(`search-results-${column}`).style.display = 'none';
             }
         });
     });
@@ -145,34 +197,3 @@ function initGlobalProductSearch() {
         });
     });
 }
-
-
-// pc builder
-$(document).ready(function () {
-    function fetchComponents(categoryId, dropdown) {
-        $.get('../includes/fetch_components.php', { categoryId: categoryId }, function (data) {
-            const products = JSON.parse(data);
-            dropdown.empty().append('<option value="">Select an option</option>');
-            products.forEach(product => {
-                dropdown.append(`<option value="${product.productId}" data-price="${product.price}">${product.productName}</option>`);
-            });
-        });
-    }
-
-    $('.component-select').each(function () {
-        const categoryId = $(this).data('category');
-        fetchComponents(categoryId, $(this));
-    });
-
-    $('.component-select').on('change', function () {
-        const price = $(this).find(':selected').data('price') || 0;
-        const priceId = `#${$(this).attr('id')}-price`;
-        $(priceId).text(price);
-
-        let total = 0;
-        $('.price').each(function () {
-            total += parseFloat($(this).text());
-        });
-        $('#total-cost').text(total.toFixed(2));
-    });
-});

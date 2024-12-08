@@ -159,93 +159,6 @@ $psuProducts = $stmt->fetchAll();
         .cta-button:hover {
             background-color: #4b2793;
         }
-
-        .search-result-item {
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            height: 450px;
-            position: relative;
-        }
-
-        .search-result-item .content-wrapper {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 50px;
-            /* Hide scrollbar by default */
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            /* Add transition */
-            transition: all 0.3s ease;
-        }
-
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .search-result-item .content-wrapper::-webkit-scrollbar {
-            display: none;
-            transition: all 0.3s ease;
-        }
-
-        /* Show scrollbar on hover */
-        .search-result-item .content-wrapper:hover {
-            scrollbar-width: thin;
-            -ms-overflow-style: auto;
-        }
-
-        .search-result-item .content-wrapper:hover::-webkit-scrollbar {
-            display: block;
-            width: 4px;
-        }
-
-        .search-result-item .content-wrapper:hover::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .search-result-item .content-wrapper:hover::-webkit-scrollbar-thumb {
-            background: rgba(127, 69, 243, 0.5);
-            border-radius: 20px;
-            transition: background-color 0.3s ease;
-        }
-
-        .search-result-item .content-wrapper:hover::-webkit-scrollbar-thumb:hover {
-            background: rgba(127, 69, 243, 0.8); /* Darker on hover */
-        }
-
-        /* Remove scrollbar buttons */
-        .search-result-item .content-wrapper:hover::-webkit-scrollbar-button {
-            display: none;
-        }
-
-        .search-result-item img {
-            width: 100%;
-            height: 200px;
-            object-fit: contain;
-            margin-bottom: 10px;
-            flex-shrink: 0;
-        }
-
-        .search-result-item h2 {
-            font-size: 1rem;
-            margin: 10px 0;
-        }
-
-        .search-result-item p {
-            font-size: 0.9rem;
-        }
-
-        .search-result-item .compare-price-button {
-            position: absolute;
-            bottom: 15px;
-            left: 15px;
-            right: 15px;
-            padding: 8px;
-            background-color: #7f45f3;
-            color: white;
-            text-align: center;
-            border-radius: 5px;
-            text-decoration: none;
-        }
     </style>
 
     <!-- Browse Brands Section -->
@@ -260,8 +173,8 @@ $psuProducts = $stmt->fetchAll();
                 </a>
             <?php endforeach; ?>
         </div>
-        <?php if (count($brands) > 21): ?>
-            <button id="show-more-btn" class="mt-3">
+        <?php if (count($brands) > 12): ?>
+            <button id="show-more-btn" class=" mt-3">
                 Show More <span>&#9660;</span>
             </button>
         <?php endif; ?>
@@ -296,14 +209,10 @@ $psuProducts = $stmt->fetchAll();
         <div class="search-results">
             <?php foreach ($cpuProducts as $product): ?>
                 <div class="search-result-item">
-                    <img src="<?= htmlspecialchars($product['productImage']); ?>" 
-                         alt="<?= htmlspecialchars($product['productName']); ?>">
-                    <div class="content-wrapper">
-                        <h2><?= htmlspecialchars($product['productName']); ?></h2>
-                        <p><?= htmlspecialchars($product['description']); ?></p>
-                    </div>
-                    <a href="/buyCheaper/public/product_details.php?id=<?= $product['productId']; ?>" 
-                       class="compare-price-button">Compare Price</a>
+                    <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
+                    <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
+                    <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
+                    <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -316,14 +225,10 @@ $psuProducts = $stmt->fetchAll();
             <div class="search-results">
                 <?php foreach ($ramProducts as $product): ?>
                     <div class="search-result-item">
-                        <img src="<?= htmlspecialchars($product['productImage']); ?>" 
-                             alt="<?= htmlspecialchars($product['productName']); ?>">
-                        <div class="content-wrapper">
-                            <h2><?= htmlspecialchars($product['productName']); ?></h2>
-                            <p><?= htmlspecialchars($product['description']); ?></p>
-                        </div>
-                        <a href="/buyCheaper/public/product_details.php?id=<?= $product['productId']; ?>" 
-                           class="compare-price-button">Compare Price</a>
+                        <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
+                        <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
+                        <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
+                        <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -338,14 +243,10 @@ $psuProducts = $stmt->fetchAll();
         <div class="search-results">
             <?php foreach ($psuProducts as $product): ?>
                 <div class="search-result-item">
-                    <img src="<?= htmlspecialchars($product['productImage']); ?>" 
-                         alt="<?= htmlspecialchars($product['productName']); ?>">
-                    <div class="content-wrapper">
-                        <h2><?= htmlspecialchars($product['productName']); ?></h2>
-                        <p><?= htmlspecialchars($product['description']); ?></p>
-                    </div>
-                    <a href="/buyCheaper/public/product_details.php?id=<?= $product['productId']; ?>" 
-                       class="compare-price-button">Compare Price</a>
+                    <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
+                    <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
+                    <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
+                    <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
                 </div>
             <?php endforeach; ?>
         </div>
