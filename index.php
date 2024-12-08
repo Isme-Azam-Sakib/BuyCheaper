@@ -27,9 +27,16 @@ $stmt = $pdo->prepare($query);
 $stmt->execute();
 $recentProducts = $stmt->fetchAll();
 
+// Category IDs
 $cpuCategoryId = 1;
+$gpuCategoryId = 2;
 $ramCategoryId = 3;
 $psuCategoryId = 4;
+$casingCategoryId = 5;
+$coolerCategoryId = 6;
+$motherboardCategoryId = 7;
+$ssdCategoryId = 8;
+
 $stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage
                        FROM products p
                        JOIN vendor_prices vp ON p.productId = vp.productId

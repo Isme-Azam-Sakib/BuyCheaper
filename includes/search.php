@@ -1,54 +1,37 @@
 <?php
 include '../config/database.php';
 
-// Check if the request includes 'query'
 if (isset($_POST['query']) && !empty($_POST['query'])) {
     $search = "%" . $_POST['query'] . "%";
-
-    // Determine if the request is for product comparison or regular search
-    $isComparison = isset($_POST['comparison']) && $_POST['comparison'] === 'true';
-
-    // Prepare the query
+    
     $stmt = $pdo->prepare("
-        SELECT 
+        SELECT DISTINCT
             p.productId, 
             p.productName AS name, 
-            p.productImage AS image, 
-            MIN(vp.price) AS lowestPrice 
+            p.productImage AS image,
+            p.description,
+            MIN(vp.price) AS lowestPrice,
+            v.vendorName,
+            v.vendorLogo
         FROM products p
         LEFT JOIN vendor_prices vp ON p.productId = vp.productId
+        LEFT JOIN vendors v ON vp.vendorId = v.vendorId
         WHERE p.productName LIKE :search
         GROUP BY p.productId
         LIMIT 10
     ");
+    
     $stmt->execute([':search' => $search]);
-    $results = $stmt->fetchAll();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($results) {
-        if ($isComparison) {
-            // For comparison page, return data as JSON
-            header('Content-Type: application/json');
-            echo json_encode($results);
-        } else {
-            // For home page, render HTML for live search results
-            foreach ($results as $result) {
-                echo '
-                <div class="search-result" onclick="redirectToProduct(' . htmlspecialchars($result['productId']) . ')">
-                    <img src="' . htmlspecialchars($result['image']) . '" alt="' . htmlspecialchars($result['name']) . '">
-                    <span>' . htmlspecialchars($result['name']) . '</span>
-                </div>';
-            }
-        }
+        header('Content-Type: application/json');
+        echo json_encode($results);
     } else {
-        if ($isComparison) {
-            // JSON response for no results in comparison page
-            echo json_encode(['message' => 'No results found']);
-        } else {
-            // HTML response for no results in home page
-            echo '<p>No results found</p>';
-        }
+        header('Content-Type: application/json');
+        echo json_encode(['message' => 'No results found']);
     }
 } else {
-    echo 'Invalid request.';
+    echo json_encode(['message' => 'Invalid request']);
 }
 ?>

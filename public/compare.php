@@ -7,107 +7,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Comparison</title>
     <link rel="stylesheet" href="/buyCheaper/css/style.css">
-    <style>
-        .comparison-container {
-            padding: 20px;
-            overflow-x: auto;
-        }
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-        .comparison-table th, .comparison-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        .comparison-table th {
-            background-color: #f2f2f2;
-        }
-        .comparison-table td:first-child {
-            font-weight: bold;
-            background-color: #f9f9f9;
-        }
-        .comparison-table input {
-            width: 100%;
-            padding: 5px;
-        }
-        .comparison-table img {
-            max-width: 100px;
-            height: auto;
-        }
-    </style>
 </head>
 <body>
     <div class="comparison-container">
-        <h1>Compare Products</h1>
-        <table class="comparison-table">
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Product 1</th>
-                    <th>Product 2</th>
-                    <th>Product 3</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Search bar row -->
-                <tr>
-                    <td>Search</td>
-                    <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <td>
-                            <input type="text" class="product-search" placeholder="Search for a product..." data-column="<?= $i ?>">
-                        </td>
-                    <?php endfor; ?>
-                </tr>
+        <h1>Product Comparison</h1>
+        <p class="comparison-subtitle">Find and select products to see the differences and similarities between them and grab the best one at the best price!</p>
+        
+        <div class="comparison-table">
+            <!-- Header Row (Search) -->
+            <div class="table-row header-row">
+                <div class="table-cell header-cell">Compare Products</div>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="table-cell">
+                        <div class="search-container">
+                            <input type="text" class="product-search" placeholder="Search and Select Product" data-column="<?= $i ?>">
+                            <div class="search-results-container" id="search-results-<?= $i ?>"></div>
+                        </div>
+                    </div>
+                <?php endfor; ?>
+            </div>
 
-                <!-- Dynamic rows -->
-                <tr>
-                    <td>Image</td>
-                    <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <td id="image-<?= $i ?>"></td>
-                    <?php endfor; ?>
-                </tr>
-                <tr>
-                    <td>Name</td>
-                    <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <td id="name-<?= $i ?>"></td>
-                    <?php endfor; ?>
-                </tr>
-                <tr>
-                    <td>Vendor</td>
-                    <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <td id="vendor-<?= $i ?>"></td>
-                    <?php endfor; ?>
-                </tr>
-                <tr>
-                    <td>Lowest Price</td>
-                    <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <td id="price-<?= $i ?>"></td>
-                    <?php endfor; ?>
-                </tr>
-                <tr>
-                    <td>Model</td>
-                    <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <td id="model-<?= $i ?>"></td>
-                    <?php endfor; ?>
-                </tr>
-                <tr>
-                    <td>Brand</td>
-                    <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <td id="brand-<?= $i ?>"></td>
-                    <?php endfor; ?>
-                </tr>
-                <tr>
-                    <td>Summary</td>
-                    <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <td id="summary-<?= $i ?>"></td>
-                    <?php endfor; ?>
-                </tr>
-            </tbody>
-        </table>
+            <!-- Product Image Row -->
+            <div class="table-row">
+                <div class="table-cell header-cell">Product Image</div>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="table-cell" id="image-<?= $i ?>"></div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Product Name Row -->
+            <div class="table-row">
+                <div class="table-cell header-cell">Product Name</div>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="table-cell" id="name-<?= $i ?>"></div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Vendor Row -->
+            <div class="table-row">
+                <div class="table-cell header-cell">Vendor</div>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="table-cell" id="vendor-<?= $i ?>"></div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Lowest Price Row -->
+            <div class="table-row">
+                <div class="table-cell header-cell">Lowest Price</div>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="table-cell" id="price-<?= $i ?>"></div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Model Row -->
+            <div class="table-row">
+                <div class="table-cell header-cell">Model</div>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="table-cell" id="model-<?= $i ?>"></div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Brand Row -->
+            <div class="table-row">
+                <div class="table-cell header-cell">Brand</div>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="table-cell" id="brand-<?= $i ?>"></div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Summary Row -->
+            <div class="table-row">
+                <div class="table-cell header-cell">Summary</div>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="table-cell" id="summary-<?= $i ?>"></div>
+                <?php endfor; ?>
+            </div>
+        </div>
     </div>
-
+    
     <script src="../js/app.js"></script>
 </body>
 </html>
