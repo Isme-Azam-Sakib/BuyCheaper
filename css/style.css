@@ -326,10 +326,27 @@ body {
 /* Product Image */
 .product-image {
     width: 100%;
-    max-width: 250px;
-    height: auto;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    height: 200px;
+    margin-bottom: 15px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
+}
+
+.product-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    background: #f8f9fa;
+}
+
+/* Remove any other img-related styles that might be conflicting */
+.carousel-item img:not([src]), 
+.carousel-item img[src=""], 
+.carousel-item img[src="#"] {
+    display: none;
 }
 
 /* Product Description */
@@ -719,8 +736,8 @@ body {
 }
 
 .carousel-item {
-    flex: 0 0 300px; /* Fixed width */
-    min-height: 400px; /* Minimum height */
+    flex: 0 0 300px;
+    min-height: 400px;
     margin: 0 15px;
     padding: 15px;
     border: 1px solid #ddd;
@@ -732,19 +749,42 @@ body {
     flex-direction: column;
 }
 
-.carousel-item img {
+.product-image {
     width: 100%;
     height: 200px;
-    object-fit: contain;
     margin-bottom: 15px;
-    background-color: #fff;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
+}
+
+.product-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.no-image {
+    width: 100%;
+    height: 100%;
+    background: #f8f9fa url('/buyCheaper/images/no-image.png') center/contain no-repeat;
+}
+
+.carousel-item img:not([src]), 
+.carousel-item img[src=""], 
+.carousel-item img[src="#"] {
+    display: block;
+    min-height: 200px;
+    background: #f8f9fa url('../images/no-image.png') center/contain no-repeat;
+    border: 1px solid #eee;
 }
 
 .carousel-item h3 {
     font-size: 16px;
     margin-bottom: 10px;
-    line-height: 1.4;
-    max-height: 44px;
+    height: 40px;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -759,6 +799,7 @@ body {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    margin-bottom: 15px;
 }
 
 .carousel-item .price {

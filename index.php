@@ -199,10 +199,14 @@ $psuProducts = $stmt->fetchAll();
             <div class="carousel-track">
                 <?php foreach ($recentProducts as $product): ?>
                     <div class="carousel-item">
-                        <img src="<?= $product['productImage']; ?>" alt="<?= $product['productName']; ?>" />
-                        <h3><?= $product['productName']; ?></h3>
-                        <p style="margin-bottom: 60px"><?= $product['description']; ?></p>
-                        <span class="price">Price: ৳<?= $product['price']; ?></span>
+                        <div class="product-image">
+                            <img src="<?= !empty($product['productImage']) ? htmlspecialchars($product['productImage']) : '/buyCheaper/assets/no-image.png' ?>" 
+                                 alt="<?= htmlspecialchars($product['productName']) ?>"
+                                 loading="lazy">
+                        </div>
+                        <h3><?= htmlspecialchars($product['productName']); ?></h3>
+                        <p><?= htmlspecialchars($product['description']); ?></p>
+                        <span class="price">Price: ৳<?= number_format($product['price']); ?></span>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -216,7 +220,9 @@ $psuProducts = $stmt->fetchAll();
         <div class="search-results">
             <?php foreach ($cpuProducts as $product): ?>
                 <div class="search-result-item">
-                    <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
+                    <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
+                         alt="<?= htmlspecialchars($product['productName']) ?>"
+                         onerror="this.src='/buyCheaper/assets/no-image.png'">
                     <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
                     <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
                     <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
@@ -232,7 +238,9 @@ $psuProducts = $stmt->fetchAll();
             <div class="search-results">
                 <?php foreach ($ramProducts as $product): ?>
                     <div class="search-result-item">
-                        <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
+                        <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
+                             alt="<?= htmlspecialchars($product['productName']) ?>"
+                             onerror="this.src='/buyCheaper/assets/no-image.png'">
                         <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
                         <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
                         <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
@@ -250,7 +258,9 @@ $psuProducts = $stmt->fetchAll();
         <div class="search-results">
             <?php foreach ($psuProducts as $product): ?>
                 <div class="search-result-item">
-                    <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
+                    <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
+                         alt="<?= htmlspecialchars($product['productName']) ?>"
+                         onerror="this.src='/buyCheaper/assets/no-image.png'">
                     <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
                     <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
                     <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
@@ -286,7 +296,6 @@ $psuProducts = $stmt->fetchAll();
         });
     </script>
     <script src="js/app.js" defer></script>
-    <!-- <script src="js/scripts.js" defer></script> -->
 
 </body>
 
