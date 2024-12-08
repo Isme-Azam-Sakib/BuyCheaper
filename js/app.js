@@ -79,100 +79,73 @@ function selectProduct(column, productId) {
     fetch(`/buyCheaper/includes/getProductDetails.php?productId=${productId}`)
         .then(response => response.json())
         .then(product => {
-            // Set Product Image
-            document.querySelector(`#image-${column}`).innerHTML = `
-                <img src="${product.image}" alt="${product.name}">
+            const detailsDiv = document.querySelector(`#column-${column} .product-details`);
+            detailsDiv.innerHTML = `
+                <div class="selected-product">
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p class="price">৳${product.lowest_price}</p>
+                    <p>${product.description}</p>
+                </div>
             `;
-
-            // Set Product Name
-            document.querySelector(`#name-${column}`).textContent = product.name;
-
-            // Set Vendor
-            document.querySelector(`#vendor-${column}`).innerHTML = `
-                <img src="${product.vendor_logo}" alt="${product.vendor_name}">
-            `;
-
-            // Set Lowest Price
-            document.querySelector(`#price-${column}`).textContent = `৳${product.lowest_price}`;
-
-            // Set Model (remove first word)
-            const model = product.name.split(' ').slice(1).join(' ');
-            document.querySelector(`#model-${column}`).textContent = model;
-
-            // Set Brand (first word)
-            const brand = product.name.split(' ')[0];
-            document.querySelector(`#brand-${column}`).textContent = brand;
-
-            // Set Summary
-            document.querySelector(`#summary-${column}`).textContent = product.description;
         })
         .catch(error => console.error('Error:', error));
 }
 
 function initComparisonSearch() {
     document.querySelectorAll('.product-search').forEach(input => {
-        const column = input.getAttribute('data-column');
-        const resultsContainer = document.createElement('div');
-        resultsContainer.className = 'search-results-container';
-        resultsContainer.id = `search-results-${column}`;
-        input.parentNode.appendChild(resultsContainer);
-
-        input.addEventListener('input', function() {
+        input.addEventListener('input', function () {
+            const column = this.getAttribute('data-column');
             const query = this.value.trim();
-            
+            const resultsDiv = document.querySelector(`#column-${column}-results`);
+
             if (query.length > 2) {
                 fetch('/buyCheaper/includes/search.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({
-                        query: query,
-                        comparison: 'true'
-                    })
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ query, comparison: 'true' })
                 })
-                .then(response => response.json())
+                .then(response => response.json())  // Parse JSON response
                 .then(data => {
-                    const resultsDiv = document.getElementById(`search-results-${column}`);
                     resultsDiv.innerHTML = '';
 
-                    if (data.message) {
-                        resultsDiv.innerHTML = `<div class="no-results">${data.message}</div>`;
-                    } else {
+                    if (data.message) {  // If no results found
+                        resultsDiv.innerHTML = `<p>${data.message}</p>`;
+                    } else {  // If results found
                         data.forEach(product => {
-                            const resultItem = document.createElement('div');
-                            resultItem.className = 'search-result-item';
-                            resultItem.innerHTML = `
+                            const productDiv = document.createElement('div');
+                            productDiv.classList.add('product-result');
+                            productDiv.innerHTML = `
                                 <img src="${product.image}" alt="${product.name}">
-                                <div class="result-details">
-                                    <div class="product-name">${product.name}</div>
-                                    <div class="product-price">৳${product.lowestPrice}</div>
-                                </div>
+                                <p>${product.name} - ৳${product.lowestPrice}</p>
                             `;
-                            
-                            resultItem.addEventListener('click', () => {
+                            productDiv.addEventListener('click', () => {
                                 selectProduct(column, product.productId);
-                                resultsDiv.innerHTML = '';
-                                input.value = product.name;
+                                resultsDiv.innerHTML = ''; // Clear results
+                                input.value = product.name; // Update input
                             });
-                            
-                            resultsDiv.appendChild(resultItem);
+                            resultsDiv.appendChild(productDiv);
                         });
+                        resultsDiv.style.display = 'block'; // Show results
                     }
-                    resultsDiv.style.display = 'block';
                 })
                 .catch(error => {
-                    console.error('Search error:', error);
+                    console.error('Error:', error);
+                    resultsDiv.innerHTML = '<p>Error loading results</p>';
                 });
             } else {
-                document.getElementById(`search-results-${column}`).style.display = 'none';
+                resultsDiv.innerHTML = '';
+                resultsDiv.style.display = 'none';
             }
         });
 
         // Hide results when clicking outside
         document.addEventListener('click', function(e) {
-            if (!input.contains(e.target) && !document.getElementById(`search-results-${column}`).contains(e.target)) {
-                document.getElementById(`search-results-${column}`).style.display = 'none';
+            if (!input.contains(e.target)) {
+                const resultsDiv = document.querySelector(`#column-${input.getAttribute('data-column')}-results`);
+                if (resultsDiv) {
+                    resultsDiv.style.display = 'none';
+                }
             }
         });
     });

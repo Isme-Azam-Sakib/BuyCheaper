@@ -20,7 +20,6 @@
         .comparison-table th, .comparison-table td {
             border: 1px solid #ddd;
             padding: 8px;
-            width: 25%;
         }
         .comparison-table th {
             background-color: #f2f2f2;

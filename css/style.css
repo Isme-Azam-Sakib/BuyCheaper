@@ -914,129 +914,129 @@ body {
 product comparison
 =================== */
 .comparison-container {
-    max-width: 1200px;
-    margin: 30px auto;
+    text-align: center;
     padding: 20px;
 }
 
-.comparison-table {
-    display: table;
+.comparison-columns {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+}
+
+.comparison-column {
+    width: 30%;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.product-search {
     width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
+    padding: 10px;
+    margin-bottom: 10px;
     border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
-.table-row {
-    display: table-row;
-}
-
-.table-cell {
-    display: table-cell;
-    padding: 15px;
-    border: 1px solid #ddd;
-    vertical-align: middle;
-}
-
-/* Fixed width for the header column */
-.header-cell {
-    width: 150px;
-    background-color: #f8f9fa;
-    font-weight: bold;
-}
-
-/* Fixed width for product columns */
-.table-cell:not(.header-cell) {
-    width: calc((100% - 150px) / 3);
-}
-
-/* Ensure content fits within cells */
-.table-cell img {
+.product-details img {
     max-width: 100%;
     height: auto;
+    margin-bottom: 10px;
 }
 
-/* Search container adjustments */
-.search-container {
-    position: relative;
+
+.best-price-container {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.price-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.price {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.vendor-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.vendor-logo {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+.buy-now-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    text-align: center;
     width: 100%;
 }
 
-/* Ensure search results don't break layout */
-.search-results-container {
+.buy-now-btn:hover {
+    background: #0056b3;
+}
+
+.product-details {
     position: absolute;
     top: 100%;
     left: 0;
-    width: 100%;
-    max-height: 300px; /* Fixed height for scrolling */
-    overflow-y: auto; /* Enable vertical scrolling */
+    right: 0;
     background: white;
     border: 1px solid #ddd;
-    border-radius: 0 0 4px 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
     z-index: 1000;
+    display: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Search result item */
-.search-result-item {
+.product-result {
+    padding: 10px;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    padding: 10px;
+    gap: 10px;
     border-bottom: 1px solid #eee;
-    cursor: pointer;
-    background: white;
 }
 
-.search-result-item:last-child {
-    border-bottom: none;
-}
-
-.search-result-item:hover {
+.product-result:hover {
     background-color: #f5f5f5;
 }
 
-.search-result-item img {
+.product-result img {
     width: 40px;
     height: 40px;
     object-fit: contain;
-    margin-right: 10px;
 }
 
-.result-details {
-    flex: 1;
-    min-width: 0; /* Prevents flex item from overflowing */
+.product-result p {
+    margin: 0;
+    flex-grow: 1;
 }
 
-.product-name {
-    font-size: 14px;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.product-price {
-    color: var(--accent-color);
-    font-weight: 600;
-    font-size: 13px;
-}
-
-/* Custom scrollbar for search results */
-.search-results-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.search-results-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.search-results-container::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 3px;
-}
-
-.search-results-container::-webkit-scrollbar-thumb:hover {
-    background: #555;
+.search-container {
+    position: relative;
+    width: 100%;
 }
 
 
