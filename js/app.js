@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     initSearch();
     initComparisonSearch();
+    initCarousel();
 });
 
 function initSearch() {
@@ -141,8 +142,18 @@ function selectProduct(column, productId) {
                 <img src="${product.vendor_logo}" alt="${product.vendor_name}">
             `;
 
-            // Set Lowest Price
+            // Set Lowest Price and Store Button
             document.querySelector(`#price-${column}`).textContent = `৳${product.lowest_price}`;
+            
+            // Update store button with the correct URL
+            const storeButton = document.querySelector(`#store-button-${column}`);
+            if (product.vendor_url) {
+                storeButton.innerHTML = `
+                    <a href="${product.vendor_url}" target="_blank" class="visit-store-btn">Visit Store</a>
+                `;
+            } else {
+                storeButton.innerHTML = ''; // Clear button if no URL available
+            }
 
             // Set Model (remove first word)
             const model = product.name.split(' ').slice(1).join(' ');
@@ -156,4 +167,52 @@ function selectProduct(column, productId) {
             document.querySelector(`#summary-${column}`).textContent = product.description;
         })
         .catch(error => console.error('Error:', error));
+}
+
+function initCarousel() {
+    const track = document.querySelector('.carousel-track');
+    if (!track) return; // Exit if no carousel exists
+
+    const items = document.querySelectorAll('.carousel-item');
+    const leftArrow = document.querySelector('.left-arrow');
+    const rightArrow = document.querySelector('.right-arrow');
+    
+    let currentIndex = 0;
+    const itemWidth = 330; // 300px width + 30px margin
+    const maxIndex = Math.max(0, items.length - Math.floor(track.offsetWidth / itemWidth));
+
+    function updateCarousel() {
+        const offset = -currentIndex * itemWidth;
+        track.style.transform = `translateX(${offset}px)`;
+        
+        // Update arrow visibility
+        leftArrow.style.opacity = currentIndex === 0 ? '0.5' : '1';
+        rightArrow.style.opacity = currentIndex === maxIndex ? '0.5' : '1';
+    }
+
+    rightArrow.addEventListener('click', () => {
+        if (currentIndex < maxIndex) {
+            currentIndex++;
+            updateCarousel();
+        }
+    });
+
+    leftArrow.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCarousel();
+        }
+    });
+
+    // Initial setup
+    updateCarousel();
+
+    // Update on window resize
+    window.addEventListener('resize', () => {
+        const newMaxIndex = Math.max(0, items.length - Math.floor(track.offsetWidth / itemWidth));
+        if (currentIndex > newMaxIndex) {
+            currentIndex = newMaxIndex;
+        }
+        updateCarousel();
+    });
 }

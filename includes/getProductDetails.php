@@ -1,27 +1,35 @@
 <?php
-require_once '../config/database.php';
+include '../config/database.php';
 
-$productId = $_GET['productId'] ?? '';
-if ($productId) {
+if (isset($_GET['productId'])) {
+    $productId = $_GET['productId'];
+    
     $stmt = $pdo->prepare("
         SELECT 
-            p.productName AS name, 
-            p.productImage AS image, 
+            p.productId,
+            p.productName as name,
+            p.productImage as image,
             p.description,
-            vp.price AS lowest_price,
-            v.vendorName AS vendor_name,
-            v.vendorLogo AS vendor_logo,
-            vp.productUrl AS product_url
+            v.vendorName as vendor_name,
+            v.vendorLogo as vendor_logo,
+            vp.price as lowest_price,
+            vp.productUrl as vendor_url
         FROM products p
-        LEFT JOIN vendor_prices vp ON p.productId = vp.productId
-        LEFT JOIN vendors v ON vp.vendorId = v.vendorId
+        JOIN vendor_prices vp ON p.productId = vp.productId
+        JOIN vendors v ON vp.vendorId = v.vendorId
         WHERE p.productId = :productId
-        AND vp.price = (
-            SELECT MIN(price) 
-            FROM vendor_prices 
-            WHERE productId = :productId
-        )
+        ORDER BY vp.price ASC
+        LIMIT 1
     ");
-    $stmt->execute([':productId' => $productId]);
-    echo json_encode($stmt->fetch(PDO::FETCH_ASSOC));
+    
+    $stmt->execute(['productId' => $productId]);
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($product) {
+        header('Content-Type: application/json');
+        echo json_encode($product);
+    } else {
+        echo json_encode(['error' => 'Product not found']);
+    }
 }
+?>
