@@ -91,7 +91,7 @@
             </div>
         </div>
     </div>
-    
+    <?php include '../includes/footer.php'; ?>
     <script src="../js/app.js"></script>
 </body>
 </html>

@@ -37,33 +37,54 @@ $coolerCategoryId = 6;
 $motherboardCategoryId = 7;
 $ssdCategoryId = 8;
 
-$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage
+$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage,
+                       MIN(vp.price) as lowestPrice,
+                       COUNT(DISTINCT vp.vendorId) as vendorCount
                        FROM products p
                        JOIN vendor_prices vp ON p.productId = vp.productId
                        WHERE p.categoryId = :cpuCategoryId AND vp.price > 0.00
+                       GROUP BY p.productId
                        ORDER BY vp.lastUpdated DESC
                        LIMIT 8");
 $stmt->execute(['cpuCategoryId' => $cpuCategoryId]);
 $cpuProducts = $stmt->fetchAll();
 
 
-$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage
+$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage,
+                       MIN(vp.price) as lowestPrice,
+                       COUNT(DISTINCT vp.vendorId) as vendorCount
                        FROM products p
                        JOIN vendor_prices vp ON p.productId = vp.productId
                        WHERE p.categoryId = :ramCategoryId AND vp.price > 0.00
+                       GROUP BY p.productId
                        ORDER BY vp.lastUpdated DESC
                        LIMIT 8");
 $stmt->execute(['ramCategoryId' => $ramCategoryId]);
 $ramProducts = $stmt->fetchAll();
 
-$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage
+$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage,
+                       MIN(vp.price) as lowestPrice,
+                       COUNT(DISTINCT vp.vendorId) as vendorCount
                        FROM products p
                        JOIN vendor_prices vp ON p.productId = vp.productId
                        WHERE p.categoryId = :psuCategoryId AND vp.price > 0.00
+                       GROUP BY p.productId
                        ORDER BY vp.lastUpdated DESC
                        LIMIT 8");
 $stmt->execute(['psuCategoryId' => $psuCategoryId]);
 $psuProducts = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage,
+                       MIN(vp.price) as lowestPrice,
+                       COUNT(DISTINCT vp.vendorId) as vendorCount
+                       FROM products p
+                       JOIN vendor_prices vp ON p.productId = vp.productId
+                       WHERE p.categoryId = :gpuCategoryId AND vp.price > 0.00
+                       GROUP BY p.productId
+                       ORDER BY vp.lastUpdated DESC
+                       LIMIT 8");
+$stmt->execute(['gpuCategoryId' => $gpuCategoryId]);
+$gpuProducts = $stmt->fetchAll();
 
 ?>
 
@@ -79,6 +100,7 @@ $psuProducts = $stmt->fetchAll();
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@100..900&family=Poppins:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
 <body>
@@ -214,58 +236,163 @@ $psuProducts = $stmt->fetchAll();
         </div>
     </section>
 
-    <!-- CPU Carousel -->
-    <section class="product-container container mt-5">
-        <h2>Processors</h2>
-        <div class="search-results">
-            <?php foreach ($cpuProducts as $product): ?>
-                <div class="search-result-item">
-                    <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
-                         alt="<?= htmlspecialchars($product['productName']) ?>"
-                         onerror="this.src='/buyCheaper/assets/no-image.png'">
-                    <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
-                    <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
-                    <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
+    <!-- CPU Section -->
+    <section class="product-container">
+        <div class="container">
+            <h2>Processors</h2>
+            <div class="products-grid">
+                <?php foreach ($cpuProducts as $product): ?>
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
+                                 alt="<?= htmlspecialchars($product['productName']) ?>"
+                                 onerror="this.src='/buyCheaper/assets/no-image.png'">
+                            <?php if (isset($product['vendorCount']) && $product['vendorCount'] > 1): ?>
+                                <span class="vendor-count"><?= $product['vendorCount'] ?> vendors</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="product-info">
+                            <h3><?= htmlspecialchars($product['productName']); ?></h3>
+                            <p class="product-description"><?= htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?></p>
+                            <div class="product-footer">
+                                <div class="price">
+                                    <span class="label">Starting from</span>
+                                    <span class="amount">৳<?= number_format($product['lowestPrice']); ?></span>
+                                </div>
+                                <a href="/buyCheaper/public/product_details.php?id=<?= $product['productId']; ?>" 
+                                   class="compare-prices-btn">Compare Prices</a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+                <div class="product-card view-all-card">
+                    <a href="/buyCheaper/public/category_products.php?id=1" class="view-all-link">
+                        <i class="fa-solid fa-microchip"></i>
+                        <h3>View All Processors</h3>
+                        <i class="fa-solid fa-angle-right"></i>
+                    </a>
                 </div>
-            <?php endforeach; ?>
+            </div>
         </div>
     </section>
 
-    <!-- ram Carousel -->
-    <div class="full-width">
-        <section class="product-container container mt-5">
-            <h2>Browse Rams</h2>
-            <div class="search-results">
+    <!-- RAM Section -->
+    <section class="product-container">
+        <div class="container">
+            <h2>Browse RAMs</h2>
+            <div class="products-grid">
                 <?php foreach ($ramProducts as $product): ?>
-                    <div class="search-result-item">
-                        <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
-                             alt="<?= htmlspecialchars($product['productName']) ?>"
-                             onerror="this.src='/buyCheaper/assets/no-image.png'">
-                        <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
-                        <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
-                        <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
+                                 alt="<?= htmlspecialchars($product['productName']) ?>"
+                                 onerror="this.src='/buyCheaper/assets/no-image.png'">
+                            <?php if (isset($product['vendorCount']) && $product['vendorCount'] > 1): ?>
+                                <span class="vendor-count"><?= $product['vendorCount'] ?> vendors</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="product-info">
+                            <h3><?= htmlspecialchars($product['productName']); ?></h3>
+                            <p class="product-description"><?= htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?></p>
+                            <div class="product-footer">
+                                <div class="price">
+                                    <span class="label">Starting from</span>
+                                    <span class="amount">৳<?= number_format($product['lowestPrice']); ?></span>
+                                </div>
+                                <a href="/buyCheaper/public/product_details.php?id=<?= $product['productId']; ?>" 
+                                   class="compare-prices-btn">Compare Prices</a>
+                            </div>
+                        </div>
                     </div>
                 <?php endforeach; ?>
-            </div>
-        </section>
-    </div>
-
-
-
-    <!-- PSU Carousel -->
-    <section class="product-container container mt-5">
-        <h2>Powersupply</h2>
-        <div class="search-results">
-            <?php foreach ($psuProducts as $product): ?>
-                <div class="search-result-item">
-                    <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
-                         alt="<?= htmlspecialchars($product['productName']) ?>"
-                         onerror="this.src='/buyCheaper/assets/no-image.png'">
-                    <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
-                    <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
-                    <a href="/buyCheaper/public/product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
+                <div class="product-card view-all-card">
+                    <a href="/buyCheaper/public/category_products.php?id=3" class="view-all-link">
+                        <i class="fa-solid fa-memory"></i>
+                        <h3>View All RAMs</h3>
+                        <i class="fa-solid fa-angle-right"></i>
+                    </a>
                 </div>
-            <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+
+    <!-- GPU Section -->
+    <section class="product-container">
+        <div class="container">
+            <h2>Graphics Cards</h2>
+            <div class="products-grid">
+                <?php foreach ($gpuProducts as $product): ?>
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
+                                 alt="<?= htmlspecialchars($product['productName']) ?>"
+                                 onerror="this.src='/buyCheaper/assets/no-image.png'">
+                            <?php if (isset($product['vendorCount']) && $product['vendorCount'] > 1): ?>
+                                <span class="vendor-count"><?= $product['vendorCount'] ?> vendors</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="product-info">
+                            <h3><?= htmlspecialchars($product['productName']); ?></h3>
+                            <p class="product-description"><?= htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?></p>
+                            <div class="product-footer">
+                                <div class="price">
+                                    <span class="label">Starting from</span>
+                                    <span class="amount">৳<?= number_format($product['lowestPrice']); ?></span>
+                                </div>
+                                <a href="/buyCheaper/public/product_details.php?id=<?= $product['productId']; ?>" 
+                                   class="compare-prices-btn">Compare Prices</a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+                <div class="product-card view-all-card">
+                    <a href="/buyCheaper/public/category_products.php?id=2" class="view-all-link">
+                        <i class="fa-solid fa-video"></i>
+                        <h3>View All GPUs</h3>
+                        <i class="fa-solid fa-angle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PSU Section -->
+    <section class="product-container">
+        <div class="container">
+            <h2>Power Supply</h2>
+            <div class="products-grid">
+                <?php foreach ($psuProducts as $product): ?>
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="<?= !empty($product['productImage']) ? $product['productImage'] : '/buyCheaper/assets/no-image.png' ?>" 
+                                 alt="<?= htmlspecialchars($product['productName']) ?>"
+                                 onerror="this.src='/buyCheaper/assets/no-image.png'">
+                            <?php if (isset($product['vendorCount']) && $product['vendorCount'] > 1): ?>
+                                <span class="vendor-count"><?= $product['vendorCount'] ?> vendors</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="product-info">
+                            <h3><?= htmlspecialchars($product['productName']); ?></h3>
+                            <p class="product-description"><?= htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?></p>
+                            <div class="product-footer">
+                                <div class="price">
+                                    <span class="label">Starting from</span>
+                                    <span class="amount">৳<?= number_format($product['lowestPrice']); ?></span>
+                                </div>
+                                <a href="/buyCheaper/public/product_details.php?id=<?= $product['productId']; ?>" 
+                                   class="compare-prices-btn">Compare Prices</a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+                <div class="product-card view-all-card">
+                    <a href="/buyCheaper/public/category_products.php?id=4" class="view-all-link">
+                        <i class="fa-solid fa-plug"></i>
+                        <h3>View All PSUs</h3>
+                        <i class="fa-solid fa-angle-right"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -296,7 +423,7 @@ $psuProducts = $stmt->fetchAll();
         });
     </script>
     <script src="js/app.js" defer></script>
-
+    <?php include 'includes/footer.php'; ?>
 </body>
 
 </html>

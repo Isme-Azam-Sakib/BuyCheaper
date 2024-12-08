@@ -50,5 +50,6 @@ if (isset($_GET['id'])) {
             <?php } ?>
         </div>
     </div>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

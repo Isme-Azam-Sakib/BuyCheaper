@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initSearch();
     initComparisonSearch();
     initCarousel();
+    initFilters();
 });
 
 function initSearch() {
@@ -215,4 +216,34 @@ function initCarousel() {
         }
         updateCarousel();
     });
+}
+
+function initFilters() {
+    // Handle items per page change
+    const itemsPerPage = document.getElementById('items-per-page');
+    if (itemsPerPage) {
+        itemsPerPage.addEventListener('change', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('per_page', this.value);
+            urlParams.delete('page'); // Reset to first page when changing items per page
+            window.location.href = window.location.pathname + '?' + urlParams.toString();
+        });
+    }
+
+    // Handle sort change
+    const sortSelect = document.getElementById('sort-products');
+    if (sortSelect) {
+        // Set initial value from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('sort')) {
+            sortSelect.value = urlParams.get('sort');
+        }
+
+        sortSelect.addEventListener('change', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('sort', this.value);
+            urlParams.delete('page'); // Reset to first page when changing sort
+            window.location.href = window.location.pathname + '?' + urlParams.toString();
+        });
+    }
 }

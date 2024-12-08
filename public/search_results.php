@@ -51,6 +51,7 @@ if ($query) {
             window.location.href = `product_details.php?id=${productId}`;
         }
     </script>
+<?php include '../includes/footer.php'; ?>
 </body>
 
 </html>
