@@ -158,7 +158,7 @@ function isMatch($scrapedStandardName, $existingStandardName) {
     $scrapedKeywords = explode(' ', $scrapedStandardName);
     $existingKeywords = explode(' ', $existingStandardName);
 
-    // Check if at least 75% of the existing keywords appear in the scraped product
+
     $matchedCount = 0;
     foreach ($existingKeywords as $word) {
         if (in_array($word, $scrapedKeywords)) {
@@ -210,4 +210,5 @@ foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];
     scrapeCategory($url, $pdo, $categoryId, 4); 
 }
+
 ?>

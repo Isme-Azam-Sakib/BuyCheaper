@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 body.classList.remove('loading'); // Remove loading class to enable scroll
                 
                 setTimeout(() => {
-                    preloader.remove();
+                    preloader.remove(); 
                 }, 500);
             }, 3000);
             

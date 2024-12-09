@@ -184,5 +184,6 @@ foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];
     scrapeCategory($url, $pdo, $categoryId, 6); 
 }
+
 ?>
 

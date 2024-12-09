@@ -198,48 +198,54 @@ function handleDatabaseOperations($pdo, $productName, $productPrice, $productIma
 }
 
 // Scrape category
+
+https://www.startech.com.bd/component/processor, 1, 1
 function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
-    $page = 1;
-    do {
-        $htmlContent = fetch_html_content($url . "?page=" . $page);
-        if (!$htmlContent) break;
+$page = 1;
+do {
+    $htmlContent = fetch_html_content($url . "?page=" . $page);
+    if (!$htmlContent) break;
 
-        $dom = new DOMDocument();
-        libxml_use_internal_errors(true);
-        $dom->loadHTML($htmlContent);
-        $xpath = new DOMXPath($dom);
-        $productCards = $xpath->query("//div[contains(@class, 'p-item')]");
+    $dom = new DOMDocument();
+    libxml_use_internal_errors(true);
+    $dom->loadHTML($htmlContent);
+    $xpath = new DOMXPath($dom);
+    $productCards = $xpath->query("//div[contains(@class, 'p-item')]");
 
-        $productsFound = false;
-        foreach ($productCards as $product) {
-            $productNameNode = $xpath->query(".//h4[@class='p-item-name']/a", $product)->item(0);
-            $productName = $productNameNode ? $productNameNode->nodeValue : 'N/A';
-        
-            $brand = strtok($productName, ' ');
-        
-            $productUrlNode = $xpath->query(".//h4[@class='p-item-name']/a", $product)->item(0);
-            $productUrl = $productUrlNode ? $productUrlNode->getAttribute('href') : '#';
-        
-            $productImageNode = $xpath->query(".//div[contains(@class, 'p-item-img')]/a/img", $product)->item(0);
-            $productImage = $productImageNode ? $productImageNode->getAttribute('src') : 'no-image.jpg';
-        
-            $descriptionNode = $xpath->query(".//div[@class='short-description']", $product)->item(0);
-            $description = $descriptionNode ? $descriptionNode->nodeValue : 'No description';
-        
-            $priceNode = $xpath->query(".//div[@class='p-item-price']/span", $product)->item(0);
-            $productPrice = $priceNode ? floatval(str_replace(',', '', preg_replace('/[^\d.]/', '', $priceNode->nodeValue))) : 0;
-        
-            // Only process products with a valid price
-            if ($productPrice > 0) {
-                handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand);
-                $productsFound = true;
-            }
+    $productsFound = false;
+    foreach ($productCards as $product) {
+        $productNameNode = $xpath->query(".//h4[@class='p-item-name']/a", $product)->item(0);
+        $productName = $productNameNode ? $productNameNode->nodeValue : 'N/A';
+    
+        $brand = strtok($productName, ' ');
+    
+        $productUrlNode = $xpath->query(".//h4[@class='p-item-name']/a", $product)->item(0);
+        $productUrl = $productUrlNode ? $productUrlNode->getAttribute('href') : '#';
+    
+        $productImageNode = $xpath->query(".//div[contains(@class, 'p-item-img')]/a/img", $product)->item(0);
+        $productImage = $productImageNode ? $productImageNode->getAttribute('src') : 'no-image.jpg';
+    
+        $descriptionNode = $xpath->query(".//div[@class='short-description']", $product)->item(0);
+        $description = $descriptionNode ? $descriptionNode->nodeValue : 'No description';
+    
+        $priceNode = $xpath->query(".//div[@class='p-item-price']/span", $product)->item(0);
+        $productPrice = $priceNode ? floatval(str_replace(',', '', preg_replace('/[^\d.]/', '', $priceNode->nodeValue))) : 0;
+    
+        // Only process products with a valid price
+        if ($productPrice > 0) {
+            handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand);
+            $productsFound = true;
         }
-        $page++;
-    } while ($productsFound);
+    }
+    $page++;
+} while ($productsFound);
 }
 // Loop through categories
 foreach ($categories as $category => $url) {
     $categoryId = $categoryIds[$category];
     scrapeCategory($url, $pdo, $categoryId, 1);
 }
+
+
+
+

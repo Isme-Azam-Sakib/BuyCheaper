@@ -2,10 +2,9 @@
 include '../config/database.php';
 include '../includes/navbar.php';
 
-// Get category ID from URL
+
 $categoryId = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
-// Pagination settings
 $products_per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 12;
 $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($current_page - 1) * $products_per_page;
