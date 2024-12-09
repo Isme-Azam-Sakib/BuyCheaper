@@ -3,6 +3,33 @@ document.addEventListener('DOMContentLoaded', function () {
     initComparisonSearch();
     initCarousel();
     initFilters();
+
+    const preloader = document.getElementById('preloader');
+    const body = document.body;
+    
+    // Check if this is the first visit
+    const hasVisited = localStorage.getItem('hasVisited');
+    
+    if (!hasVisited) {
+        // Add loading class to prevent scroll during preloader
+        body.classList.add('loading');
+        
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                preloader.classList.add('hidden');
+                body.classList.remove('loading'); // Remove loading class to enable scroll
+                
+                setTimeout(() => {
+                    preloader.remove();
+                }, 500);
+            }, 3000);
+            
+            localStorage.setItem('hasVisited', 'true');
+        });
+    } else {
+        // Remove preloader immediately
+        preloader.remove();
+    }
 });
 
 function initSearch() {
@@ -10,6 +37,18 @@ function initSearch() {
     const searchResults = document.getElementById('results');
     if (!searchInput || !searchResults) return;
 
+    // Add form submit handler for Enter key
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query.length > 0) {
+                window.location.href = `/buyCheaper/public/search_results.php?query=${encodeURIComponent(query)}`;
+            }
+        }
+    });
+
+    // Existing search functionality
     searchInput.addEventListener('input', function () {
         const query = searchInput.value.trim();
         if (query.length > 2) {

@@ -76,73 +76,56 @@ function generateStandardName($productName)
     return $standard_name;
 }
 
-function handleDatabaseOperations($pdo, $productName, $productPrice, $productUrl, $categoryId, $vendorId, $description, $brand, $productImage) {
-    // Generate the standard name for the scraped product
-    $scrapedStandardName = generateStandardName($productName);
+function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand) {
+    // First check if product exists in all_products
+    $stmt = $pdo->prepare("SELECT id FROM all_products WHERE standard_name = :standard_name");
+    $standardName = strtolower($brand . '-' . $categoryId);
+    $stmt->execute([':standard_name' => $standardName]);
+    $existingProduct = $stmt->fetch();
 
-    try {
-        // Try to insert new product first
+    if ($existingProduct) {
+        $productId = $existingProduct['id'];
+    } else {
+        // Insert new product if it doesn't exist
         $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
         $stmt->execute([
-            ':standard_name' => $scrapedStandardName,
+            ':standard_name' => $standardName,
             ':categoryId' => $categoryId,
             ':brand' => $brand
         ]);
         $productId = $pdo->lastInsertId();
-    } catch (PDOException $e) {
-        // If duplicate entry, fetch the existing product ID
-        if ($e->getCode() == '23000') { // Integrity constraint violation
-            $stmt = $pdo->prepare("SELECT id FROM all_products WHERE standard_name = :standard_name");
-            $stmt->execute([':standard_name' => $scrapedStandardName]);
-            $productId = $stmt->fetchColumn();
-        } else {
-            throw $e; // Re-throw if it's a different error
-        }
     }
 
-    $stmt = $pdo->prepare("SELECT productId FROM products WHERE productId = :productId");
-    $stmt->execute([':productId' => $productId]);
-    $existingProduct = $stmt->fetch();
+    // Update or insert product details
+    $stmt = $pdo->prepare("INSERT INTO products (productId, productName, productImage, categoryId, description) 
+        VALUES (:productId, :productName, :productImage, :categoryId, :description)
+        ON DUPLICATE KEY UPDATE 
+        productName = :productName,
+        productImage = :productImage,
+        description = :description");
+    
+    $stmt->execute([
+        ':productId' => $productId,
+        ':productName' => $productName,
+        ':productImage' => $productImage,
+        ':categoryId' => $categoryId,
+        ':description' => $description
+    ]);
 
-    if ($existingProduct) {
-        $stmt = $pdo->prepare("UPDATE products SET productName = :productName, description = :description WHERE productId = :productId");
-        $stmt->execute([
-            ':productName' => $productName,
-            ':description' => $description,
-            ':productId' => $productId
-        ]);
-    } else {
-        $stmt = $pdo->prepare("INSERT INTO products (productId, productName, productImage, categoryId, description) VALUES (:productId, :productName, :productImage, :categoryId, :description)");
-        $stmt->execute([
-            ':productId' => $productId,
-            ':productName' => $productName,
-            ':productImage' => $productImage,
-            ':categoryId' => $categoryId,
-            ':description' => $description
-        ]);
-    }
-
-    $stmt = $pdo->prepare("SELECT * FROM vendor_prices WHERE productId = :productId AND vendorId = :vendorId");
-    $stmt->execute([':productId' => $productId, ':vendorId' => $vendorId]);
-    $existingPrice = $stmt->fetch();
-
-    if ($existingPrice) {
-        $stmt = $pdo->prepare("UPDATE vendor_prices SET price = :price, productUrl = :productUrl, lastUpdated = NOW() WHERE productId = :productId AND vendorId = :vendorId");
-        $stmt->execute([
-            ':price' => $productPrice,
-            ':productUrl' => $productUrl,
-            ':productId' => $productId,
-            ':vendorId' => $vendorId
-        ]);
-    } else {
-        $stmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price, productUrl, lastUpdated) VALUES (:productId, :vendorId, :price, :productUrl, NOW())");
-        $stmt->execute([
-            ':productId' => $productId,
-            ':vendorId' => $vendorId,
-            ':price' => $productPrice,
-            ':productUrl' => $productUrl
-        ]);
-    }
+    // Update or insert vendor price
+    $stmt = $pdo->prepare("INSERT INTO vendor_prices (productId, vendorId, price, productUrl, lastUpdated) 
+        VALUES (:productId, :vendorId, :price, :productUrl, NOW())
+        ON DUPLICATE KEY UPDATE 
+        price = :price,
+        productUrl = :productUrl,
+        lastUpdated = NOW()");
+        
+    $stmt->execute([
+        ':productId' => $productId,
+        ':vendorId' => $vendorId,
+        ':price' => $productPrice,
+        ':productUrl' => $productUrl
+    ]);
 }
 
 function isMatch($scrapedStandardName, $existingStandardName) {
@@ -187,7 +170,7 @@ function scrapeCategory($url, $pdo, $categoryId, $vendorId) {
             $productPrice = $priceNode ? floatval(str_replace(',', '', preg_replace('/[^\d.]/', '', $priceNode->nodeValue))) : 0;
 
             if ($productPrice > 0) {
-                handleDatabaseOperations($pdo, $productName, $productPrice, $productUrl, $categoryId, $vendorId, $description, $brand, $productImage);
+                handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand);
                 $productsFound = true;
             }
         }

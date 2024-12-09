@@ -654,14 +654,21 @@ body {
 /* Navbar */
 .navbar {
     background-color: #ffffff;
-    padding: 15px 30px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 15px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 1000;
+    width: 100%;
+}
+
+.navbar .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .navbar-logo img {
@@ -1700,4 +1707,62 @@ product comparison
 .view-all-link h3 {
     margin: 0;
     font-size: 1.2rem;
+}
+
+/* Preloader */
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+#preloader.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: #ffffff;
+    padding: 15px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+.navbar .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Add !important to ensure these styles take precedence */
+.navbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: sticky !important;
+    width: 100% !important;
+}
+
+/* Ensure these styles are applied to all pages */
+body > .navbar {
+    background-color: #ffffff !important;
+    padding: 15px 0 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    top: 0 !important;
+    z-index: 1000 !important;
 }

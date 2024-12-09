@@ -101,9 +101,20 @@ $gpuProducts = $stmt->fetchAll();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
 </head>
 
 <body>
+    <!-- <div id="preloader">
+        <dotlottie-player 
+            src="/buyCheaper/assets/preloader.json"
+            background="transparent" 
+            speed="1" 
+            style="width: 300px; height: 300px" 
+            loop 
+            autoplay>
+        </dotlottie-player>
+    </div> -->
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="overlay"></div>
@@ -115,7 +126,6 @@ $gpuProducts = $stmt->fetchAll();
                 <input type="text" id="search" placeholder="Search something (E.g. ryzen 7800X3D)" autocomplete="off">
                 <div id="results"></div> 
             </div>
-            <!-- <a href="#search" class="cta-button">Get Started</a> -->
         </div>
     </section>
     <style>

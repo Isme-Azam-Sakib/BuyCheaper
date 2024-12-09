@@ -5,53 +5,211 @@ include '../includes/navbar.php';
 $query = isset($_GET['query']) ? $_GET['query'] : '';
 
 if ($query) {
+    // Pagination settings
+    $products_per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 12;
+    $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $offset = ($current_page - 1) * $products_per_page;
+
+    // Get total number of products for pagination
     $search = "%{$query}%";
-    $stmt = $pdo->prepare("SELECT productId, productName, productImage, description FROM products WHERE productName LIKE :search");
+    $stmt = $pdo->prepare("
+        SELECT COUNT(DISTINCT p.productId) as total
+        FROM products p
+        JOIN vendor_prices vp ON p.productId = vp.productId
+        WHERE p.productName LIKE :search AND vp.price > 0
+    ");
     $stmt->execute(['search' => $search]);
+    $total_products = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    $total_pages = ceil($total_products / $products_per_page);
+
+    // Update the SQL query to handle sorting
+    $sort_order = isset($_GET['sort']) ? $_GET['sort'] : 'latest';
+    $order_clause = match ($sort_order) {
+        'price-low' => 'MIN(vp.price) ASC',
+        'price-high' => 'MIN(vp.price) DESC',
+        'name' => 'p.productName ASC',
+        default => 'vp.lastUpdated DESC'
+    };
+
+    // Fetch products with pagination and sorting
+    $stmt = $pdo->prepare("
+        SELECT p.productId, p.productName, p.productImage, p.description,
+               MIN(vp.price) as lowestPrice,
+               COUNT(DISTINCT vp.vendorId) as vendorCount
+        FROM products p
+        JOIN vendor_prices vp ON p.productId = vp.productId
+        WHERE p.productName LIKE :search AND vp.price > 0
+        GROUP BY p.productId
+        ORDER BY {$order_clause}
+        LIMIT :offset, :limit
+    ");
+    $stmt->bindValue(':search', $search, PDO::PARAM_STR);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $products_per_page, PDO::PARAM_INT);
+    $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Results for "<?php echo htmlspecialchars($query); ?>"</title>
+    <title>Search Results for "<?= htmlspecialchars($query) ?>"</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@100..900&family=Poppins:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
 <body>
-    
-    <h1 class="container" style="font-weight: 700;">Search Results for "<?php echo htmlspecialchars($query); ?>"</h1>
-    <div class="search-results container">
+    <div class="container mt-5">
+        <div class="category-header">
+            <h1>Search Results for "<?= htmlspecialchars($query) ?>"</h1>
+            <p><?= $total_products ?> products found</p>
+        </div>
+
+        <div class="category-filters">
+            <div class="products-per-page">
+                <label>Show:</label>
+                <select id="items-per-page">
+                    <option value="12" <?= $products_per_page == 12 ? 'selected' : '' ?>>12</option>
+                    <option value="36" <?= $products_per_page == 36 ? 'selected' : '' ?>>36</option>
+                    <option value="72" <?= $products_per_page == 72 ? 'selected' : '' ?>>72</option>
+                    <option value="108" <?= $products_per_page == 108 ? 'selected' : '' ?>>108</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Sort by:</label>
+                <select id="sort-products">
+                    <option value="latest" <?= $sort_order === 'latest' ? 'selected' : '' ?>>Latest</option>
+                    <option value="price-low" <?= $sort_order === 'price-low' ? 'selected' : '' ?>>Price: Low to High</option>
+                    <option value="price-high" <?= $sort_order === 'price-high' ? 'selected' : '' ?>>Price: High to Low</option>
+                    <option value="name" <?= $sort_order === 'name' ? 'selected' : '' ?>>Name</option>
+                </select>
+            </div>
+        </div>
+
         <?php if (!empty($products)): ?>
-            <?php foreach ($products as $product): ?>
-                <div class="search-result-item">
-                    <img src="<?php echo htmlspecialchars($product['productImage']); ?>" alt="<?php echo htmlspecialchars($product['productName']); ?>">
-                    <h2><?php echo htmlspecialchars($product['productName']); ?></h2>
-                    <p style="margin-bottom: 60px"><?php echo htmlspecialchars($product['description']); ?></p>
-                    <a href="product_details.php?id=<?php echo $product['productId']; ?>" class="compare-price-button">Compare Price</a>
+            <div class="products-grid">
+                <?php foreach ($products as $product): ?>
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="<?= !empty($product['productImage']) ? htmlspecialchars($product['productImage']) : '/buyCheaper/images/no-image.png' ?>"
+                                alt="<?= htmlspecialchars($product['productName']); ?>">
+                            <?php if ($product['vendorCount'] > 1): ?>
+                                <span class="vendor-count"><?= $product['vendorCount'] ?> vendors</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="product-info">
+                            <h3><?= htmlspecialchars($product['productName']); ?></h3>
+                            <p class="product-description"><?= htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?></p>
+                            <div class="product-footer">
+                                <div class="price">
+                                    <span class="label">Starting from</span>
+                                    <span class="amount">৳<?= number_format($product['lowestPrice']); ?></span>
+                                </div>
+                                <a href="product_details.php?id=<?= $product['productId']; ?>"
+                                    class="compare-prices-btn">Compare Prices</a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Pagination -->
+            <?php if ($total_pages > 1): ?>
+                <div class="pagination">
+                    <?php if ($current_page > 1): ?>
+                        <a href="?query=<?= urlencode($query) ?>&page=<?= $current_page - 1 ?>&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>" class="page-link">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    <?php endif; ?>
+
+                    <?php
+                    $start_page = max(1, $current_page - 2);
+                    $end_page = min($total_pages, $start_page + 4);
+                    if ($end_page - $start_page < 4) {
+                        $start_page = max(1, $end_page - 4);
+                    }
+                    ?>
+
+                    <?php if ($start_page > 1): ?>
+                        <a href="?query=<?= urlencode($query) ?>&page=1&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>" class="page-link">1</a>
+                        <?php if ($start_page > 2): ?>
+                            <span class="page-dots">...</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                        <a href="?query=<?= urlencode($query) ?>&page=<?= $i ?>&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>"
+                            class="page-link <?= $i === $current_page ? 'active' : '' ?>">
+                            <?= $i ?>
+                        </a>
+                    <?php endfor; ?>
+
+                    <?php if ($end_page < $total_pages): ?>
+                        <?php if ($end_page < $total_pages - 1): ?>
+                            <span class="page-dots">...</span>
+                        <?php endif; ?>
+                        <a href="?query=<?= urlencode($query) ?>&page=<?= $total_pages ?>&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>" class="page-link"><?= $total_pages ?></a>
+                    <?php endif; ?>
+
+                    <?php if ($current_page < $total_pages): ?>
+                        <a href="?query=<?= urlencode($query) ?>&page=<?= $current_page + 1 ?>&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>" class="page-link">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    <?php endif; ?>
                 </div>
-            <?php endforeach; ?>
+            <?php endif; ?>
+
         <?php else: ?>
-            <p>No results found for "<?php echo htmlspecialchars($query); ?>"</p>
+            <div class="no-products">
+                <i class="fas fa-search fa-3x mb-3"></i>
+                <p>No products found matching your search.</p>
+            </div>
         <?php endif; ?>
     </div>
 
-
+    <?php include '../includes/footer.php'; ?>
 
     <script>
-        function redirectToProduct(productId) {
-            window.location.href = `product_details.php?id=${productId}`;
-        }
-    </script>
-<?php include '../includes/footer.php'; ?>
-</body>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle items per page change
+            const itemsPerPage = document.getElementById('items-per-page');
+            if (itemsPerPage) {
+                itemsPerPage.addEventListener('change', function() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('per_page', this.value);
+                    urlParams.set('query', '<?= htmlspecialchars($query) ?>');
+                    const sort = urlParams.get('sort');
+                    if (sort) {
+                        urlParams.set('sort', sort);
+                    }
+                    urlParams.delete('page'); // Reset to first page
+                    window.location.href = window.location.pathname + '?' + urlParams.toString();
+                });
+            }
 
+            // Handle sort change
+            const sortSelect = document.getElementById('sort-products');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('sort', this.value);
+                    urlParams.set('query', '<?= htmlspecialchars($query) ?>');
+                    const perPage = urlParams.get('per_page');
+                    if (perPage) {
+                        urlParams.set('per_page', perPage);
+                    }
+                    urlParams.delete('page'); // Reset to first page
+                    window.location.href = window.location.pathname + '?' + urlParams.toString();
+                });
+            }
+        });
+    </script>
+</body>
 </html>

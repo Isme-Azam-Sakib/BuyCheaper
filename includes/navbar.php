@@ -17,48 +17,56 @@
 <body>
 
 <nav class="navbar">
-    <div class="navbar-logo">
-        <a href="/buyCheaper/index.php"><img src="/buyCheaper/assets/buyCheaper2.png" alt="Logo"></a>
+    <div class="container">
+        <div class="navbar-logo">
+            <a href="/buyCheaper/index.php"><img src="/buyCheaper/assets/buyCheaper2.png" alt="Logo"></a>
+        </div>
+        <ul class="navbar-menu">
+            <li><a href="/buyCheaper/index.php">Home</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle">
+                    Categories <i class="fas fa-chevron-down"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="/buyCheaper/public/category_products.php?id=1">Processors</a></li>
+                    <li><a href="/buyCheaper/public/category_products.php?id=2">Graphics Cards</a></li>
+                    <li><a href="/buyCheaper/public/category_products.php?id=3">RAM</a></li>
+                    <li><a href="/buyCheaper/public/category_products.php?id=4">Power Supply</a></li>
+                    <li><a href="/buyCheaper/public/category_products.php?id=5">Casing</a></li>
+                    <li><a href="/buyCheaper/public/category_products.php?id=6">Cooler</a></li>
+                    <li><a href="/buyCheaper/public/category_products.php?id=7">Motherboard</a></li>
+                    <li><a href="/buyCheaper/public/category_products.php?id=8">Storage</a></li>
+                </ul>
+            </li>
+            <li><a href="/buyCheaper/public/about.php">About</a></li>
+            <li><a href="/buyCheaper/public/contact.php">Contact</a></li>
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true): ?>
+                <li><a href="/buyCheaper/public/scraper.php">Scrapers</a></li>
+                <li>
+                    <a href="/buyCheaper/admin/index.php" title="Dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+            <?php endif; ?>
+            <li><a href="/buyCheaper/public/compare.php"><i class="fas fa-balance-scale"></i> Compare</a></li>
+            <?php if (!isset($_SESSION['admin_logged_in'])): ?>
+                <li>
+                    <a href="/buyCheaper/public/login.php" title="Login">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span class="nav-text">Login</span>
+                    </a>
+                </li>
+            <?php else: ?>
+                <li>
+                    <a href="/buyCheaper/public/logout.php" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="nav-text">Logout</span>
+                    </a>
+                </li>
+            <?php endif; ?>
+        </ul>
     </div>
-    <ul class="navbar-menu">
-        <li><a href="/buyCheaper/index.php">Home</a></li>
-        <li class="dropdown">
-            <a href="#" class="dropdown-toggle">
-                Categories <i class="fas fa-chevron-down"></i>
-            </a>
-            <ul class="dropdown-menu">
-                <li><a href="/buyCheaper/public/category_products.php?id=1">Processors</a></li>
-                <li><a href="/buyCheaper/public/category_products.php?id=2">Graphics Cards</a></li>
-                <li><a href="/buyCheaper/public/category_products.php?id=3">RAM</a></li>
-                <li><a href="/buyCheaper/public/category_products.php?id=4">Power Supply</a></li>
-                <li><a href="/buyCheaper/public/category_products.php?id=5">Casing</a></li>
-                <li><a href="/buyCheaper/public/category_products.php?id=6">Cooler</a></li>
-                <li><a href="/buyCheaper/public/category_products.php?id=7">Motherboard</a></li>
-                <li><a href="/buyCheaper/public/category_products.php?id=8">Storage</a></li>
-            </ul>
-        </li>
-        <li><a href="about.php">About</a></li>
-        <li><a href="contact.php">Contact</a></li>
-        <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true): ?>
-            <li><a href="/buyCheaper/public/scraper.php">Scrapers</a></li>
-        <?php endif; ?>
-        <li><a href="/buyCheaper/public/compare.php"><i class="fas fa-balance-scale"></i> Compare</a></li>
-        <?php if (!isset($_SESSION['admin_logged_in'])): ?>
-            <li>
-                <a href="/buyCheaper/public/login.php" title="Login">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span class="nav-text">Login</span>
-                </a>
-            </li>
-        <?php else: ?>
-            <li>
-                <a href="/buyCheaper/public/logout.php" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="nav-text">Logout</span>
-                </a>
-            </li>
-        <?php endif; ?>
-    </ul>
 </nav>
 </body>
 </html>
