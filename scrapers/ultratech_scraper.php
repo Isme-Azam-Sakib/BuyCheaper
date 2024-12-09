@@ -80,26 +80,15 @@ function generateStandardName($productName)
 
 function handleDatabaseOperations($pdo, $productName, $productPrice, $productImage, $productUrl, $categoryId, $vendorId, $description, $brand)
 {
-
     $scrapedStandardName = generateStandardName($productName);
 
-    $stmt = $pdo->prepare("SELECT id, standard_name FROM all_products WHERE categoryId = :categoryId");
-    $stmt->execute([':categoryId' => $categoryId]);
-    $allProducts = $stmt->fetchAll();
+    // Check if the standard name already exists
+    $stmt = $pdo->prepare("SELECT id FROM all_products WHERE standard_name = :standard_name AND categoryId = :categoryId");
+    $stmt->execute([':standard_name' => $scrapedStandardName, ':categoryId' => $categoryId]);
+    $existingProduct = $stmt->fetch();
 
-    $matchedProductId = null;
-    foreach ($allProducts as $product) {
-        $existingStandardName = $product['standard_name'];
-        $existingId = $product['id'];
-
-        if (isMatch($scrapedStandardName, $existingStandardName)) {
-            $matchedProductId = $existingId;
-            break;
-        }
-    }
-
-    if ($matchedProductId) {
-        $productId = $matchedProductId;
+    if ($existingProduct) {
+        $productId = $existingProduct['id'];
     } else {
         $stmt = $pdo->prepare("INSERT INTO all_products (standard_name, categoryId, brand) VALUES (:standard_name, :categoryId, :brand)");
         $stmt->execute([

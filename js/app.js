@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initComparisonSearch();
     initCarousel();
     initFilters();
+    initBrandList();
 
     const preloader = document.getElementById('preloader');
     const body = document.body;
@@ -126,23 +127,23 @@ function initComparisonSearch() {
                         resultsDiv.innerHTML = `<div class="no-results">${data.message}</div>`;
                     } else {
                         data.forEach(product => {
-                            const resultItem = document.createElement('div');
-                            resultItem.className = 'search-result-item';
-                            resultItem.innerHTML = `
+                            const resultDiv = document.createElement('div');
+                            resultDiv.className = 'search-result';
+                            resultDiv.innerHTML = `
                                 <img src="${product.image}" alt="${product.name}">
-                                <div class="result-details">
+                                <div class="result-info">
                                     <div class="product-name">${product.name}</div>
                                     <div class="product-price">৳${product.lowestPrice}</div>
                                 </div>
                             `;
                             
-                            resultItem.addEventListener('click', () => {
+                            resultDiv.addEventListener('click', () => {
                                 selectProduct(column, product.productId);
                                 resultsDiv.style.display = 'none';
                                 input.value = product.name;
                             });
                             
-                            resultsDiv.appendChild(resultItem);
+                            resultsDiv.appendChild(resultDiv);
                         });
                     }
                     resultsDiv.style.display = 'block';
@@ -283,6 +284,30 @@ function initFilters() {
             urlParams.set('sort', this.value);
             urlParams.delete('page'); // Reset to first page when changing sort
             window.location.href = window.location.pathname + '?' + urlParams.toString();
+        });
+    }
+}
+
+function initBrandList() {
+    const brandList = document.getElementById('brand-list');
+    const showMoreBtn = document.getElementById('show-more-btn');
+    const hiddenBrands = document.querySelectorAll('.hidden-brand');
+    
+    if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', function() {
+            // Add active class to button for arrow rotation
+            this.classList.toggle('active');
+            
+            hiddenBrands.forEach(brand => {
+                brand.classList.toggle('hidden-brand');
+            });
+            
+            // Toggle button text with smooth transition
+            if (this.innerHTML.includes('Show More')) {
+                this.innerHTML = 'Show Less <span style="display: inline-block;">&#9660;</span>';
+            } else {
+                this.innerHTML = 'Show More <span style="display: inline-block;">&#9660;</span>';
+            }
         });
     }
 }

@@ -31,7 +31,69 @@ $categoryIds = [
     'ssd' => 8
 ];
 
+function fetch_html_content($url)
+{
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+    $htmlContent = curl_exec($ch);
+    if (curl_errno($ch)) {
+        echo "cURL Error: " . curl_error($ch);
+        return false;
+    } else {
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if ($httpCode == 200) {
+            return $htmlContent;
+        } else {
+            echo "Failed to fetch content. HTTP Status Code: $httpCode<br>";
+            return false;
+        }
+    }
+    curl_close($ch);
+}
 
+
+function generateStandardName($productName)
+{
+    $standard_name = strtolower($productName);
+    $standard_name = preg_replace('/[^a-z0-9\s\-\/\.]/', '', $standard_name);
+    $standard_name = str_replace(['-', '/', '|'], ' ', $standard_name);
+    $keywords = [
+        'gaming', 'processor', 'gen', 'series', 'edition', 'liquid', 
+        'cooler', 'new', 'latest', 'ultra', 'pro', 'max', 'rgb', 'mm', 'aio', 
+        'desktop', 'laptop', 'graphics', 'card', 'cool', 'power', 'supply', 'ram', 
+        'ssd', 'fps'
+    ];
+    foreach ($keywords as $word) {
+        $standard_name = preg_replace('/\b' . preg_quote($word, '/') . '\b/', '', $standard_name);
+    }
+
+    $standard_name = preg_replace('/(\d+\s?(gb|tb|hz|mhz))/', ' $1 ', $standard_name);
+    $standard_name = trim(preg_replace('/\s+/', ' ', $standard_name));
+
+    return $standard_name;
+}
+
+function isMatch($scrapedStandardName, $existingStandardName) {
+    $scrapedKeywords = explode(' ', $scrapedStandardName);
+    $existingKeywords = explode(' ', $existingStandardName);
+
+    // Check if at least 75% of the existing keywords appear in the scraped product
+    $matchedCount = 0;
+    foreach ($existingKeywords as $word) {
+        if (in_array($word, $scrapedKeywords)) {
+            $matchedCount++;
+        }
+    }
+
+    // Use a threshold for matching (e.g., 75% of the words must match)
+    $threshold = 0.75;
+    return ($matchedCount / count($existingKeywords)) >= $threshold;
+}
 
 function getCategoryName($categoryId) {
     $categoryNames = [

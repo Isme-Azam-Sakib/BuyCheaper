@@ -23,23 +23,32 @@ if ($query) {
     $total_pages = ceil($total_products / $products_per_page);
 
     // Update the SQL query to handle sorting
-    $sort_order = isset($_GET['sort']) ? $_GET['sort'] : 'latest';
+    $sort_order = isset($_GET['sort']) ? $_GET['sort'] : 'vendors';
     $order_clause = match ($sort_order) {
         'price-low' => 'MIN(vp.price) ASC',
         'price-high' => 'MIN(vp.price) DESC',
         'name' => 'p.productName ASC',
-        default => 'vp.lastUpdated DESC'
+        'latest' => 'vp.lastUpdated DESC',
+        'vendors' => 'vendorCount DESC, vp.lastUpdated DESC',
+        default => 'vendorCount DESC, vp.lastUpdated DESC'
     };
 
     // Fetch products with pagination and sorting
     $stmt = $pdo->prepare("
-        SELECT p.productId, p.productName, p.productImage, p.description,
-               MIN(vp.price) as lowestPrice,
-               COUNT(DISTINCT vp.vendorId) as vendorCount
+        SELECT 
+            p.productId, 
+            p.productName, 
+            p.productImage, 
+            p.description,
+            MIN(vp.price) as lowestPrice,
+            COUNT(DISTINCT vp.vendorId) as vendorCount,
+            MAX(vp.lastUpdated) as lastUpdated
         FROM products p
         JOIN vendor_prices vp ON p.productId = vp.productId
-        WHERE p.productName LIKE :search AND vp.price > 0
+        WHERE p.productName LIKE :search 
+            AND vp.price > 0
         GROUP BY p.productId
+        HAVING vendorCount > 0
         ORDER BY {$order_clause}
         LIMIT :offset, :limit
     ");
@@ -85,6 +94,7 @@ if ($query) {
             <div class="filter-group">
                 <label>Sort by:</label>
                 <select id="sort-products">
+                    <option value="vendors" <?= $sort_order === 'vendors' ? 'selected' : '' ?>>Most Vendors</option>
                     <option value="latest" <?= $sort_order === 'latest' ? 'selected' : '' ?>>Latest</option>
                     <option value="price-low" <?= $sort_order === 'price-low' ? 'selected' : '' ?>>Price: Low to High</option>
                     <option value="price-high" <?= $sort_order === 'price-high' ? 'selected' : '' ?>>Price: High to Low</option>

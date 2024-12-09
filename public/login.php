@@ -13,6 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($admin && $admin['password'] === $password) {
         $_SESSION['admin_logged_in'] = true;
+        $_SESSION['admin_id'] = $admin['adminId'];
+        
+        // Redirect to admin dashboard instead of home
         header("Location: /buyCheaper/index.php"); 
         exit();
     } else {

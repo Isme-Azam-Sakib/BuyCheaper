@@ -37,54 +37,78 @@ $coolerCategoryId = 6;
 $motherboardCategoryId = 7;
 $ssdCategoryId = 8;
 
-$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage,
-                       MIN(vp.price) as lowestPrice,
-                       COUNT(DISTINCT vp.vendorId) as vendorCount
-                       FROM products p
-                       JOIN vendor_prices vp ON p.productId = vp.productId
-                       WHERE p.categoryId = :cpuCategoryId AND vp.price > 0.00
-                       GROUP BY p.productId
-                       ORDER BY vp.lastUpdated DESC
-                       LIMIT 8");
+$stmt = $pdo->prepare("SELECT 
+                        p.productId, 
+                        p.productName, 
+                        p.description, 
+                        p.productImage,
+                        MIN(vp.price) as lowestPrice,
+                        COUNT(DISTINCT vp.vendorId) as vendorCount
+                    FROM products p
+                    JOIN vendor_prices vp ON p.productId = vp.productId
+                    WHERE p.categoryId = :cpuCategoryId 
+                        AND vp.price > 0.00
+                    GROUP BY p.productId
+                    HAVING vendorCount > 0
+                    ORDER BY vendorCount DESC, vp.lastUpdated DESC
+                    LIMIT 8");
 $stmt->execute(['cpuCategoryId' => $cpuCategoryId]);
 $cpuProducts = $stmt->fetchAll();
 
 
-$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage,
-                       MIN(vp.price) as lowestPrice,
-                       COUNT(DISTINCT vp.vendorId) as vendorCount
-                       FROM products p
-                       JOIN vendor_prices vp ON p.productId = vp.productId
-                       WHERE p.categoryId = :ramCategoryId AND vp.price > 0.00
-                       GROUP BY p.productId
-                       ORDER BY vp.lastUpdated DESC
-                       LIMIT 8");
+$stmt = $pdo->prepare("SELECT 
+                        p.productId, 
+                        p.productName, 
+                        p.description, 
+                        p.productImage,
+                        MIN(vp.price) as lowestPrice,
+                        COUNT(DISTINCT vp.vendorId) as vendorCount
+                    FROM products p
+                    JOIN vendor_prices vp ON p.productId = vp.productId
+                    WHERE p.categoryId = :ramCategoryId 
+                        AND vp.price > 0.00
+                    GROUP BY p.productId
+                    HAVING vendorCount > 0
+                    ORDER BY vendorCount DESC, vp.lastUpdated DESC
+                    LIMIT 8");
 $stmt->execute(['ramCategoryId' => $ramCategoryId]);
 $ramProducts = $stmt->fetchAll();
 
-$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage,
-                       MIN(vp.price) as lowestPrice,
-                       COUNT(DISTINCT vp.vendorId) as vendorCount
-                       FROM products p
-                       JOIN vendor_prices vp ON p.productId = vp.productId
-                       WHERE p.categoryId = :psuCategoryId AND vp.price > 0.00
-                       GROUP BY p.productId
-                       ORDER BY vp.lastUpdated DESC
-                       LIMIT 8");
-$stmt->execute(['psuCategoryId' => $psuCategoryId]);
-$psuProducts = $stmt->fetchAll();
-
-$stmt = $pdo->prepare("SELECT p.productId, p.productName, p.description, p.productImage,
-                       MIN(vp.price) as lowestPrice,
-                       COUNT(DISTINCT vp.vendorId) as vendorCount
-                       FROM products p
-                       JOIN vendor_prices vp ON p.productId = vp.productId
-                       WHERE p.categoryId = :gpuCategoryId AND vp.price > 0.00
-                       GROUP BY p.productId
-                       ORDER BY vp.lastUpdated DESC
-                       LIMIT 8");
+$stmt = $pdo->prepare("SELECT 
+                        p.productId, 
+                        p.productName, 
+                        p.description, 
+                        p.productImage,
+                        MIN(vp.price) as lowestPrice,
+                        COUNT(DISTINCT vp.vendorId) as vendorCount
+                    FROM products p
+                    JOIN vendor_prices vp ON p.productId = vp.productId
+                    WHERE p.categoryId = :gpuCategoryId 
+                        AND vp.price > 0.00
+                    GROUP BY p.productId
+                    HAVING vendorCount > 0
+                    ORDER BY vendorCount DESC, vp.lastUpdated DESC
+                    LIMIT 8");
 $stmt->execute(['gpuCategoryId' => $gpuCategoryId]);
 $gpuProducts = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT 
+                        p.productId, 
+                        p.productName, 
+                        p.description, 
+                        p.productImage,
+                        MIN(vp.price) as lowestPrice,
+                        COUNT(DISTINCT vp.vendorId) as vendorCount
+                    FROM products p
+                    JOIN vendor_prices vp ON p.productId = vp.productId
+                    WHERE p.categoryId = :psuCategoryId 
+                        AND vp.price > 0.00
+                    GROUP BY p.productId
+                    HAVING vendorCount > 0
+                    ORDER BY vendorCount DESC, vp.lastUpdated DESC
+                    LIMIT 8");
+$stmt->execute(['psuCategoryId' => $psuCategoryId]);
+$psuProducts = $stmt->fetchAll();
 
 ?>
 
@@ -205,15 +229,14 @@ $gpuProducts = $stmt->fetchAll();
         <h2>Browse Brands</h2>
         <div id="brand-list" class="d-flex flex-wrap gap-3">
             <?php foreach ($brands as $index => $brand): ?>
-                <a
-                    href="/buyCheaper/public/brand_products.php?brand=<?= urlencode($brand); ?>"
-                    class="brand-btn brand-item <?= $index >= 21 ? 'hidden-brand' : ''; ?>">
+                <a href="/buyCheaper/public/brand_products.php?brand=<?= urlencode($brand); ?>"
+                   class="brand-btn <?= $index >= 21 ? 'hidden-brand' : ''; ?>">
                     <?= htmlspecialchars($brand); ?>
                 </a>
             <?php endforeach; ?>
         </div>
-        <?php if (count($brands) > 12): ?>
-            <button id="show-more-btn" class=" mt-3">
+        <?php if (count($brands) > 21): ?>
+            <button id="show-more-btn" class="mt-3">
                 Show More <span>&#9660;</span>
             </button>
         <?php endif; ?>
@@ -432,7 +455,7 @@ $gpuProducts = $stmt->fetchAll();
             });
         });
     </script>
-    <script src="js/app.js" defer></script>
+    <script src="js/app.js"></script>
     <?php include 'includes/footer.php'; ?>
 </body>
 
