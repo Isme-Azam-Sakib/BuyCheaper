@@ -20,5 +20,9 @@ Use dynamic data integration to keep product information updated.
 
 **UI Design :** https://www.figma.com/design/wMkd1iqDdN55YdNK1bE1yZ/buyCheaper?node-id=0-1&node-type=canvas&t=wi2qaDpWJXgpv7yJ-0
 
-
+                                                 **Simple Overview of The Project**
+![Search-Products-and-Compare](https://github.com/user-attachments/assets/173f6589-7d9e-4d73-bc18-d4cc0f5d3b73)
+![Product-Comparison](https://github.com/user-attachments/assets/0151a7e0-ae98-4494-8f1d-da7ae86f547c)
+![Admin-Login-and-Scraping](https://github.com/user-attachments/assets/c3a14f7d-db56-4bee-9d99-071cc084a9c8)
+![Update-Product-Image](https://github.com/user-attachments/assets/4b256f65-1a13-44e0-abc3-4fa3d437f3b8)
 
