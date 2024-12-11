@@ -3,22 +3,20 @@
 
 **Problem Statement:** Finding the best deals on PC components is challenging due to numerous vendors and fluctuating prices, requiring time-consuming research. This project addresses the lack of a centralized platform by creating a user-friendly website that dynamically aggregates price data from popular vendors, enabling quick and efficient price comparisons.
 
-**Objectives** : Provide a centralized platform for easy price comparisons of PC components.
+**Features**
+Price Comparison: Users can search for PC components like CPUs, GPUs, RAM, SSDs, & more. Search results display product details, images, & prices from various vendors.
+Dynamic Pricing: The project uses web scraping techniques to dynamically fetch product prices from different vendor websites. This ensures that users get up-to-date prices.
+Product Comparison: As user is making a decision what to buy & where to buy from, we introduced a feature that can help a user to compare products side by side giving them a broader point of view
+Database Integration: Data is stored in a MySQL database with separate tables for products, vendors, categories & vendor prices. 
+User-Friendly Interface: Aims on modern, intuitive & minimalistic design to convey information to users without overwhelming them with excessive information. 
 
-Minimize the time and effort spent on manual price research.
-
-Enable users to make cost-effective and informed purchase decisions.
-
-Simplify navigation and interaction through a user-friendly interface.
-
-Use dynamic data integration to keep product information updated.
 
 **ER Diagram:** https://imgur.com/Yr9ni3f 
 
 **Context Level DFD:** https://imgur.com/TQrbIKk
 
 
-**UI Design :** https://www.figma.com/design/wMkd1iqDdN55YdNK1bE1yZ/buyCheaper?node-id=0-1&node-type=canvas&t=wi2qaDpWJXgpv7yJ-0
+**UI Design Figma Link :** https://www.figma.com/design/wMkd1iqDdN55YdNK1bE1yZ/buyCheaper?node-id=0-1&node-type=canvas&t=wi2qaDpWJXgpv7yJ-0
 
                                                  **Simple Overview of The Project**
 ![Search-Products-and-Compare](https://github.com/user-attachments/assets/173f6589-7d9e-4d73-bc18-d4cc0f5d3b73)
