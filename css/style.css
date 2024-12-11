@@ -99,6 +99,36 @@ body {
     margin-right: 12px;
 }
 
+/*category suggestion search*/
+
+.search-results {
+    position: absolute; /* Positioning to overlay below the input */
+    background-color: white; /* Background color for suggestions */
+    border: 1px solid #ccc; /* Border for the suggestions box */
+    border-radius: 4px; /* Rounded corners */
+    z-index: 1000; /* Ensure it appears above other content */
+    width: 100%; /* Full width of the input */
+    max-height: 300px; /* Limit height */
+    overflow-y: auto; /* Scroll if too many results */
+    display: none; /* Initially hidden */
+}
+
+.search-result {
+    padding: 10px; /* Padding for each suggestion */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+.search-result:hover {
+    background-color: #f0f0f0; /* Highlight on hover */
+}
+
+.no-results {
+    padding: 10px; /* Padding for no results message */
+    text-align: center; /* Center the message */
+}
+/* here */
+
+
 .result-info {
     flex: 1;
 }
