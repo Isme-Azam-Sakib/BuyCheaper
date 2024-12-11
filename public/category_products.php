@@ -2,6 +2,36 @@
 include '../config/database.php';
 include '../includes/navbar.php';
 
+if (isset($_POST['query']) && !empty($_POST['query'])) {
+    $search = "%" . $_POST['query'] . "%";
+    $categoryId = isset($_POST['categoryId']) ? intval($_POST['categoryId']) : null;
+
+    // Prepare the SQL statement to fetch products based on search query and category ID
+    $stmt = $pdo->prepare("SELECT DISTINCT
+        p.productId, 
+        p.productName AS name, 
+        p.productImage AS image,
+        MIN(vp.price) AS lowestPrice
+    FROM products p
+    LEFT JOIN vendor_prices vp ON p.productId = vp.productId
+    WHERE p.productName LIKE :search AND p.categoryId = :categoryId
+    GROUP BY p.productId
+    LIMIT 10");
+
+    $stmt->execute([':search' => $search, ':categoryId' => $categoryId]);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($results) {
+        header('Content-Type: application/json');
+        echo json_encode($results);
+    } else {
+        header('Content-Type: application/json');
+        echo json_encode(['message' => 'No results found']);
+    }
+} else {
+    echo json_encode(['message' => 'Invalid request']);
+}
+
 
 $categoryId = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
@@ -52,7 +82,6 @@ $stmt->bindValue(':limit', $products_per_page, PDO::PARAM_INT);
 $stmt->execute();
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
 <head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,10 +92,15 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 </head>
 
-<body>
+<body>      
     <div class="container mt-5">
         <div class="category-header">
             <h1><?= htmlspecialchars($categoryName); ?></h1>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search products..." class="form-control">
+                <div id="results" class="search-results" style="display: none;"></div> <!-- Container for search suggestions -->
+                <input type="hidden" id="category-id" value="<?= $categoryId; ?>"> <!-- Hidden input for category ID -->
+            </div>
             <p><?= $total_products ?> products available</p>
         </div>
 
@@ -126,7 +160,6 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     <?php endif; ?>
-
                     <?php
                     $start_page = max(1, $current_page - 2);
                     $end_page = min($total_pages, $start_page + 4);
@@ -134,28 +167,24 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         $start_page = max(1, $end_page - 4);
                     }
                     ?>
-
                     <?php if ($start_page > 1): ?>
                         <a href="?id=<?= $categoryId ?>&page=1&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>" class="page-link">1</a>
                         <?php if ($start_page > 2): ?>
                             <span class="page-dots">...</span>
                         <?php endif; ?>
                     <?php endif; ?>
-
                     <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
                         <a href="?id=<?= $categoryId ?>&page=<?= $i ?>&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>"
                             class="page-link <?= $i === $current_page ? 'active' : '' ?>">
                             <?= $i ?>
                         </a>
                     <?php endfor; ?>
-
                     <?php if ($end_page < $total_pages): ?>
                         <?php if ($end_page < $total_pages - 1): ?>
                             <span class="page-dots">...</span>
                         <?php endif; ?>
                         <a href="?id=<?= $categoryId ?>&page=<?= $total_pages ?>&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>" class="page-link"><?= $total_pages ?></a>
                     <?php endif; ?>
-
                     <?php if ($current_page < $total_pages): ?>
                         <a href="?id=<?= $categoryId ?>&page=<?= $current_page + 1 ?>&per_page=<?= $products_per_page ?>&sort=<?= $sort_order ?>" class="page-link">
                             <i class="fas fa-chevron-right"></i>
@@ -163,7 +192,6 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-
         <?php else: ?>
             <div class="no-products">
                 <i class="fas fa-box-open fa-3x mb-3"></i>
@@ -174,6 +202,8 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <?php include '../includes/footer.php'; ?>
 
+    <script src="../js/category_search.js"></script>
+    <script src="../js/category_search_suggestions.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Handle items per page change
@@ -214,6 +244,35 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     }
                     urlParams.delete('page'); // Reset to first page
                     window.location.href = window.location.pathname + '?' + urlParams.toString();
+                });
+            }
+
+            // Handle search
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const searchQuery = searchInput.value.trim();
+                        if (searchQuery) {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set('search', searchQuery);
+                            // Preserve the category ID, items per page, and sort order
+                            const categoryId = urlParams.get('id');
+                            if (categoryId) {
+                                urlParams.set('id', categoryId);
+                            }
+                            const perPage = urlParams.get('per_page');
+                            if (perPage) {
+                                urlParams.set('per_page', perPage);
+                            }
+                            const sort = urlParams.get('sort');
+                            if (sort) {
+                                urlParams.set('sort', sort);
+                            }
+                            urlParams.delete('page'); // Reset to first page
+                            window.location.href = window.location.pathname + '?' + urlParams.toString();
+                        }
+                    }
                 });
             }
         });
